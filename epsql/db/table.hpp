@@ -4,188 +4,330 @@
 #pragma once
 
 #include <algorithm>
+#include <cstring>
 #include <type_traits>
 #include <vector>
 
+#include "types.hpp"
+#include "utils/stringcompare.hpp"
 #include "utils/typeof.hpp"
 #include "value.hpp"
 
 
-#define PRINT1(__v1, ...) #__v1
-#define PRINT2(__v1, ...) #__v1, PRINT1(__VA_ARGS__)
-#define PRINT3(__v1, ...) #__v1, PRINT2(__VA_ARGS__)
-#define PRINT4(__v1, ...) #__v1, PRINT3(__VA_ARGS__)
-#define PRINT5(__v1, ...) #__v1, PRINT4(__VA_ARGS__)
-#define PRINT6(__v1, ...) #__v1, PRINT5(__VA_ARGS__)
-#define PRINT7(__v1, ...) #__v1, PRINT6(__VA_ARGS__)
-#define PRINT8(__v1, ...) #__v1, PRINT7(__VA_ARGS__)
-#define PRINT9(__v1, ...) #__v1, PRINT8(__VA_ARGS__)
-#define PRINT10(__v1, ...) #__v1, PRINT9(__VA_ARGS__)
-#define PRINT11(__v1, ...) #__v1, PRINT10(__VA_ARGS__)
-#define PRINT12(__v1, ...) #__v1, PRINT11(__VA_ARGS__)
-#define PRINT13(__v1, ...) #__v1, PRINT12(__VA_ARGS__)
-#define PRINT14(__v1, ...) #__v1, PRINT13(__VA_ARGS__)
-#define PRINT15(__v1, ...) #__v1, PRINT14(__VA_ARGS__)
-#define PRINT16(__v1, ...) #__v1, PRINT15(__VA_ARGS__)
-#define PRINT17(__v1, ...) #__v1, PRINT16(__VA_ARGS__)
-#define PRINT18(__v1, ...) #__v1, PRINT17(__VA_ARGS__)
-#define PRINT19(__v1, ...) #__v1, PRINT18(__VA_ARGS__)
-#define PRINT20(__v1, ...) #__v1, PRINT19(__VA_ARGS__)
+#define PRINT(_v1) #_v1
+#define PRINT0(...) static_assert(false && "Invalid number of PRINTS(...) arguments! The number should be bigger than zero!")
+#define PRINT1(_v1, ...) PRINT(_v1)
+#define PRINT2(_v1, ...) PRINT(_v1), PRINT1(__VA_ARGS__)
+#define PRINT3(_v1, ...) PRINT(_v1), PRINT2(__VA_ARGS__)
+#define PRINT4(_v1, ...) PRINT(_v1), PRINT3(__VA_ARGS__)
+#define PRINT5(_v1, ...) PRINT(_v1), PRINT4(__VA_ARGS__)
+#define PRINT6(_v1, ...) PRINT(_v1), PRINT5(__VA_ARGS__)
+#define PRINT7(_v1, ...) PRINT(_v1), PRINT6(__VA_ARGS__)
+#define PRINT8(_v1, ...) PRINT(_v1), PRINT7(__VA_ARGS__)
+#define PRINT9(_v1, ...) PRINT(_v1), PRINT8(__VA_ARGS__)
+#define PRINT10(_v1, ...) PRINT(_v1), PRINT9(__VA_ARGS__)
+#define PRINT11(_v1, ...) PRINT(_v1), PRINT10(__VA_ARGS__)
+#define PRINT12(_v1, ...) PRINT(_v1), PRINT11(__VA_ARGS__)
+#define PRINT13(_v1, ...) PRINT(_v1), PRINT12(__VA_ARGS__)
+#define PRINT14(_v1, ...) PRINT(_v1), PRINT13(__VA_ARGS__)
+#define PRINT15(_v1, ...) PRINT(_v1), PRINT14(__VA_ARGS__)
+#define PRINT16(_v1, ...) PRINT(_v1), PRINT15(__VA_ARGS__)
+#define PRINT17(_v1, ...) PRINT(_v1), PRINT16(__VA_ARGS__)
+#define PRINT18(_v1, ...) PRINT(_v1), PRINT17(__VA_ARGS__)
+#define PRINT19(_v1, ...) PRINT(_v1), PRINT18(__VA_ARGS__)
+#define PRINT20(_v1, ...) PRINT(_v1), PRINT19(__VA_ARGS__)
 
-#define PRINT_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20, n, ...) \
+#define PRINTS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20, n, ...) \
     PRINT##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20)
 
-#define PRINT(_v1, ...) \
-    PRINT_(_v1, __VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+#define PRINTS(...) \
+    PRINTS_(__VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
 
-#define NAME1(_v1, _v2, _v3, ...) _v1
-#define NAME2(_v1, _v2, _v3, ...) _v1, NAME1(__VA_ARGS__)
-#define NAME3(_v1, _v2, _v3, ...) _v1, NAME2(__VA_ARGS__)
-#define NAME4(_v1, _v2, _v3, ...) _v1, NAME3(__VA_ARGS__)
-#define NAME5(_v1, _v2, _v3, ...) _v1, NAME4(__VA_ARGS__)
-#define NAME6(_v1, _v2, _v3, ...) _v1, NAME5(__VA_ARGS__)
-#define NAME7(_v1, _v2, _v3, ...) _v1, NAME6(__VA_ARGS__)
-#define NAME8(_v1, _v2, _v3, ...) _v1, NAME7(__VA_ARGS__)
-#define NAME9(_v1, _v2, _v3, ...) _v1, NAME8(__VA_ARGS__)
-#define NAME10(_v1, _v2, _v3, ...) _v1, NAME9(__VA_ARGS__)
-#define NAME11(_v1, _v2, _v3, ...) _v1, NAME10(__VA_ARGS__)
-#define NAME12(_v1, _v2, _v3, ...) _v1, NAME11(__VA_ARGS__)
-#define NAME13(_v1, _v2, _v3, ...) _v1, NAME12(__VA_ARGS__)
-#define NAME14(_v1, _v2, _v3, ...) _v1, NAME13(__VA_ARGS__)
-#define NAME15(_v1, _v2, _v3, ...) _v1, NAME14(__VA_ARGS__)
-#define NAME16(_v1, _v2, _v3, ...) _v1, NAME15(__VA_ARGS__)
-#define NAME17(_v1, _v2, _v3, ...) _v1, NAME16(__VA_ARGS__)
-#define NAME18(_v1, _v2, _v3, ...) _v1, NAME17(__VA_ARGS__)
-#define NAME19(_v1, _v2, _v3, ...) _v1, NAME18(__VA_ARGS__)
-#define NAME20(_v1, _v2, _v3, ...) _v1, NAME19(__VA_ARGS__)
+#define NAME(_v1) _v1
+#define NAME0(...) static_assert(false && "Invalid number of NAMES(...) arguments! The number should be even!")
+#define NAME1(_v1, _v2, ...) NAME(_v1)
+#define NAME2(_v1, _v2, ...) NAME(_v1), NAME1(__VA_ARGS__)
+#define NAME3(_v1, _v2, ...) NAME(_v1), NAME2(__VA_ARGS__)
+#define NAME4(_v1, _v2, ...) NAME(_v1), NAME3(__VA_ARGS__)
+#define NAME5(_v1, _v2, ...) NAME(_v1), NAME4(__VA_ARGS__)
+#define NAME6(_v1, _v2, ...) NAME(_v1), NAME5(__VA_ARGS__)
+#define NAME7(_v1, _v2, ...) NAME(_v1), NAME6(__VA_ARGS__)
+#define NAME8(_v1, _v2, ...) NAME(_v1), NAME7(__VA_ARGS__)
+#define NAME9(_v1, _v2, ...) NAME(_v1), NAME8(__VA_ARGS__)
+#define NAME10(_v1, _v2, ...) NAME(_v1), NAME9(__VA_ARGS__)
+#define NAME11(_v1, _v2, ...) NAME(_v1), NAME10(__VA_ARGS__)
+#define NAME12(_v1, _v2, ...) NAME(_v1), NAME11(__VA_ARGS__)
+#define NAME13(_v1, _v2, ...) NAME(_v1), NAME12(__VA_ARGS__)
+#define NAME14(_v1, _v2, ...) NAME(_v1), NAME13(__VA_ARGS__)
+#define NAME15(_v1, _v2, ...) NAME(_v1), NAME14(__VA_ARGS__)
+#define NAME16(_v1, _v2, ...) NAME(_v1), NAME15(__VA_ARGS__)
+#define NAME17(_v1, _v2, ...) NAME(_v1), NAME16(__VA_ARGS__)
+#define NAME18(_v1, _v2, ...) NAME(_v1), NAME17(__VA_ARGS__)
+#define NAME19(_v1, _v2, ...) NAME(_v1), NAME18(__VA_ARGS__)
+#define NAME20(_v1, _v2, ...) NAME(_v1), NAME19(__VA_ARGS__)
 
-#define NAME_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60, n, ...) \
-    NAME##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60)
+#define NAMES_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
+    NAME##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
 
-#define NAME(_v1, _v2, _v3, ...) \
-    NAME_(_v1, _v2, _v3, __VA_ARGS__, 20, 20, 20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1)
-
-
-#define TYPE1(_v1, _v2, _v3, ...) _v2
-#define TYPE2(_v1, _v2, _v3, ...) _v2, TYPE1(__VA_ARGS__)
-#define TYPE3(_v1, _v2, _v3, ...) _v2, TYPE2(__VA_ARGS__)
-#define TYPE4(_v1, _v2, _v3, ...) _v2, TYPE3(__VA_ARGS__)
-#define TYPE5(_v1, _v2, _v3, ...) _v2, TYPE4(__VA_ARGS__)
-#define TYPE6(_v1, _v2, _v3, ...) _v2, TYPE5(__VA_ARGS__)
-#define TYPE7(_v1, _v2, _v3, ...) _v2, TYPE6(__VA_ARGS__)
-#define TYPE8(_v1, _v2, _v3, ...) _v2, TYPE7(__VA_ARGS__)
-#define TYPE9(_v1, _v2, _v3, ...) _v2, TYPE8(__VA_ARGS__)
-#define TYPE10(_v1, _v2, _v3, ...) _v2, TYPE9(__VA_ARGS__)
-#define TYPE11(_v1, _v2, _v3, ...) _v2, TYPE10(__VA_ARGS__)
-#define TYPE12(_v1, _v2, _v3, ...) _v2, TYPE11(__VA_ARGS__)
-#define TYPE13(_v1, _v2, _v3, ...) _v2, TYPE12(__VA_ARGS__)
-#define TYPE14(_v1, _v2, _v3, ...) _v2, TYPE13(__VA_ARGS__)
-#define TYPE15(_v1, _v2, _v3, ...) _v2, TYPE14(__VA_ARGS__)
-#define TYPE16(_v1, _v2, _v3, ...) _v2, TYPE15(__VA_ARGS__)
-#define TYPE17(_v1, _v2, _v3, ...) _v2, TYPE16(__VA_ARGS__)
-#define TYPE18(_v1, _v2, _v3, ...) _v2, TYPE17(__VA_ARGS__)
-#define TYPE19(_v1, _v2, _v3, ...) _v2, TYPE18(__VA_ARGS__)
-#define TYPE20(_v1, _v2, _v3, ...) _v2, TYPE19(__VA_ARGS__)
-
-#define TYPE_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60, n, ...) \
-    TYPE##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60)
-
-#define TYPE(_v1, _v2, _v3, ...) \
-    TYPE_(_v1, _v2, _v3, __VA_ARGS__, 20, 20, 20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1)
+#define NAMES(...) \
+    NAMES_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0, 0)
 
 
-#define FIELD1(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1;
-#define FIELD2(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD1(__VA_ARGS__)
-#define FIELD3(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD2(__VA_ARGS__)
-#define FIELD4(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD3(__VA_ARGS__)
-#define FIELD5(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD4(__VA_ARGS__)
-#define FIELD6(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD5(__VA_ARGS__)
-#define FIELD7(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD6(__VA_ARGS__)
-#define FIELD8(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD7(__VA_ARGS__)
-#define FIELD9(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD8(__VA_ARGS__)
-#define FIELD10(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD9(__VA_ARGS__)
-#define FIELD11(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD10(__VA_ARGS__)
-#define FIELD12(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD11(__VA_ARGS__)
-#define FIELD13(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD12(__VA_ARGS__)
-#define FIELD14(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD13(__VA_ARGS__)
-#define FIELD15(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD14(__VA_ARGS__)
-#define FIELD16(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD15(__VA_ARGS__)
-#define FIELD17(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD16(__VA_ARGS__)
-#define FIELD18(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD17(__VA_ARGS__)
-#define FIELD19(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD18(__VA_ARGS__)
-#define FIELD20(_v1, _v2, _v3, ...) ::epsql::db::_v3<_v2> _v1; FIELD19(__VA_ARGS__)
+#define TYPE(_v2) _v2::ValueType
+#define TYPE0(...) static_assert(false && "Invalid number of TYPES(...) arguments! The number should be even!")
+#define TYPE1(_v1, _v2, ...) TYPE(_v2)
+#define TYPE2(_v1, _v2, ...) TYPE(_v2), TYPE1(__VA_ARGS__)
+#define TYPE3(_v1, _v2, ...) TYPE(_v2), TYPE2(__VA_ARGS__)
+#define TYPE4(_v1, _v2, ...) TYPE(_v2), TYPE3(__VA_ARGS__)
+#define TYPE5(_v1, _v2, ...) TYPE(_v2), TYPE4(__VA_ARGS__)
+#define TYPE6(_v1, _v2, ...) TYPE(_v2), TYPE5(__VA_ARGS__)
+#define TYPE7(_v1, _v2, ...) TYPE(_v2), TYPE6(__VA_ARGS__)
+#define TYPE8(_v1, _v2, ...) TYPE(_v2), TYPE7(__VA_ARGS__)
+#define TYPE9(_v1, _v2, ...) TYPE(_v2), TYPE8(__VA_ARGS__)
+#define TYPE10(_v1, _v2, ...) TYPE(_v2), TYPE9(__VA_ARGS__)
+#define TYPE11(_v1, _v2, ...) TYPE(_v2), TYPE10(__VA_ARGS__)
+#define TYPE12(_v1, _v2, ...) TYPE(_v2), TYPE11(__VA_ARGS__)
+#define TYPE13(_v1, _v2, ...) TYPE(_v2), TYPE12(__VA_ARGS__)
+#define TYPE14(_v1, _v2, ...) TYPE(_v2), TYPE13(__VA_ARGS__)
+#define TYPE15(_v1, _v2, ...) TYPE(_v2), TYPE14(__VA_ARGS__)
+#define TYPE16(_v1, _v2, ...) TYPE(_v2), TYPE15(__VA_ARGS__)
+#define TYPE17(_v1, _v2, ...) TYPE(_v2), TYPE16(__VA_ARGS__)
+#define TYPE18(_v1, _v2, ...) TYPE(_v2), TYPE17(__VA_ARGS__)
+#define TYPE19(_v1, _v2, ...) TYPE(_v2), TYPE18(__VA_ARGS__)
+#define TYPE20(_v1, _v2, ...) TYPE(_v2), TYPE19(__VA_ARGS__)
 
-#define FIELD_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60, n, ...) \
-    FIELD##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40,_v41,_v42,_v43,_v44,_v45,_v46,_v47,_v48,_v49,_v50,_v51,_v52,_v53,_v54,_v55,_v56,_v57,_v58,_v59,_v60)
+#define TYPES_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
+    TYPE##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
 
-#define FIELD(_v1, _v2, _v3, ...) \
-    FIELD_(_v1, _v2, _v3, __VA_ARGS__, 20, 20, 20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1)
+#define TYPES(...) \
+    TYPES_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
 
 
-#define FIELD_GETTER(__v1, __v2) inline static const char* __v2##NameGetter() { return #__v1 "." #__v2; }
-#define GET_FIELD1(__v1, __v2, ...) FIELD_GETTER(__v1, __v2);
-#define GET_FIELD2(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD1(__v1, __VA_ARGS__)
-#define GET_FIELD3(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD2(__v1, __VA_ARGS__)
-#define GET_FIELD4(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD3(__v1, __VA_ARGS__)
-#define GET_FIELD5(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD4(__v1, __VA_ARGS__)
-#define GET_FIELD6(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD5(__v1, __VA_ARGS__)
-#define GET_FIELD7(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD6(__v1, __VA_ARGS__)
-#define GET_FIELD8(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD7(__v1, __VA_ARGS__)
-#define GET_FIELD9(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD8(__v1, __VA_ARGS__)
-#define GET_FIELD10(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD9(__v1, __VA_ARGS__)
-#define GET_FIELD11(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD10(__v1, __VA_ARGS__)
-#define GET_FIELD12(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD11(__v1, __VA_ARGS__)
-#define GET_FIELD13(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD12(__v1, __VA_ARGS__)
-#define GET_FIELD14(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD13(__v1, __VA_ARGS__)
-#define GET_FIELD15(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD14(__v1, __VA_ARGS__)
-#define GET_FIELD16(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD15(__v1, __VA_ARGS__)
-#define GET_FIELD17(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD16(__v1, __VA_ARGS__)
-#define GET_FIELD18(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD17(__v1, __VA_ARGS__)
-#define GET_FIELD19(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD18(__v1, __VA_ARGS__)
-#define GET_FIELD20(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD19(__v1, __VA_ARGS__)
-#define GET_FIELD21(__v1, __v2, ...) FIELD_GETTER(__v1, __v2); GET_FIELD20(__v1, __VA_ARGS__)
+#define FIELD(_v1, _v2) _v2 _v1
+#define FIELD0(...) static_assert(false && "Invalid number of FIELDS(...) arguments! The number should be even!")
+#define FIELD1(_v1, _v2, ...) FIELD(_v1, _v2);
+#define FIELD2(_v1, _v2, ...) FIELD(_v1, _v2); FIELD1(__VA_ARGS__)
+#define FIELD3(_v1, _v2, ...) FIELD(_v1, _v2); FIELD2(__VA_ARGS__)
+#define FIELD4(_v1, _v2, ...) FIELD(_v1, _v2); FIELD3(__VA_ARGS__)
+#define FIELD5(_v1, _v2, ...) FIELD(_v1, _v2); FIELD4(__VA_ARGS__)
+#define FIELD6(_v1, _v2, ...) FIELD(_v1, _v2); FIELD5(__VA_ARGS__)
+#define FIELD7(_v1, _v2, ...) FIELD(_v1, _v2); FIELD6(__VA_ARGS__)
+#define FIELD8(_v1, _v2, ...) FIELD(_v1, _v2); FIELD7(__VA_ARGS__)
+#define FIELD9(_v1, _v2, ...) FIELD(_v1, _v2); FIELD8(__VA_ARGS__)
+#define FIELD10(_v1, _v2, ...) FIELD(_v1, _v2); FIELD9(__VA_ARGS__)
+#define FIELD11(_v1, _v2, ...) FIELD(_v1, _v2); FIELD10(__VA_ARGS__)
+#define FIELD12(_v1, _v2, ...) FIELD(_v1, _v2); FIELD11(__VA_ARGS__)
+#define FIELD13(_v1, _v2, ...) FIELD(_v1, _v2); FIELD12(__VA_ARGS__)
+#define FIELD14(_v1, _v2, ...) FIELD(_v1, _v2); FIELD13(__VA_ARGS__)
+#define FIELD15(_v1, _v2, ...) FIELD(_v1, _v2); FIELD14(__VA_ARGS__)
+#define FIELD16(_v1, _v2, ...) FIELD(_v1, _v2); FIELD15(__VA_ARGS__)
+#define FIELD17(_v1, _v2, ...) FIELD(_v1, _v2); FIELD16(__VA_ARGS__)
+#define FIELD18(_v1, _v2, ...) FIELD(_v1, _v2); FIELD17(__VA_ARGS__)
+#define FIELD19(_v1, _v2, ...) FIELD(_v1, _v2); FIELD18(__VA_ARGS__)
+#define FIELD20(_v1, _v2, ...) FIELD(_v1, _v2); FIELD19(__VA_ARGS__)
 
-#define GET_FIELD_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21, n, ...) \
+#define FIELDS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
+    FIELD##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
+
+#define FIELDS(...) \
+    FIELDS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
+
+
+#define GET_FIELD(_v1, _v2) inline constexpr static const char* _v2##NameGetter() { return #_v1 "::" #_v2; }
+#define GET_FIELD0(...) static_assert(false && "Invalid number of GET_FIELDS(...) arguments! The number should be even!")
+#define GET_FIELD1(_v1, _v2, ...) GET_FIELD(_v1, _v2);
+#define GET_FIELD2(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD1(_v1, __VA_ARGS__)
+#define GET_FIELD3(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD2(_v1, __VA_ARGS__)
+#define GET_FIELD4(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD3(_v1, __VA_ARGS__)
+#define GET_FIELD5(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD4(_v1, __VA_ARGS__)
+#define GET_FIELD6(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD5(_v1, __VA_ARGS__)
+#define GET_FIELD7(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD6(_v1, __VA_ARGS__)
+#define GET_FIELD8(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD7(_v1, __VA_ARGS__)
+#define GET_FIELD9(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD8(_v1, __VA_ARGS__)
+#define GET_FIELD10(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD9(_v1, __VA_ARGS__)
+#define GET_FIELD11(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD10(_v1, __VA_ARGS__)
+#define GET_FIELD12(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD11(_v1, __VA_ARGS__)
+#define GET_FIELD13(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD12(_v1, __VA_ARGS__)
+#define GET_FIELD14(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD13(_v1, __VA_ARGS__)
+#define GET_FIELD15(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD14(_v1, __VA_ARGS__)
+#define GET_FIELD16(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD15(_v1, __VA_ARGS__)
+#define GET_FIELD17(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD16(_v1, __VA_ARGS__)
+#define GET_FIELD18(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD17(_v1, __VA_ARGS__)
+#define GET_FIELD19(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD18(_v1, __VA_ARGS__)
+#define GET_FIELD20(_v1, _v2, ...) GET_FIELD(_v1, _v2); GET_FIELD19(_v1, __VA_ARGS__)
+
+#define GET_FIELDS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21, n, ...) \
     GET_FIELD##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21)
 
-#define GET_FIELD(_v1, ...) \
-    GET_FIELD_(_v1, __VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+#define GET_FIELDS(_v1, ...) \
+    GET_FIELDS_(_v1, __VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
+
+#define FIELD_FULL_NAME(_v1, _v2) \
+    (std::string{#_v1 " "} + ::epsql::db::nameOf<_v2::ValueType>() + " " + _v2::name())
+#define FIELD_FULL_NAME0(...) static_assert(false && "Invalid number of FIELD_FULL_NAME(...) arguments! The number should be even!")
+#define FIELD_FULL_NAME1(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2)
+#define FIELD_FULL_NAME2(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME1(__VA_ARGS__)
+#define FIELD_FULL_NAME3(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME2(__VA_ARGS__)
+#define FIELD_FULL_NAME4(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME3(__VA_ARGS__)
+#define FIELD_FULL_NAME5(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME4(__VA_ARGS__)
+#define FIELD_FULL_NAME6(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME5(__VA_ARGS__)
+#define FIELD_FULL_NAME7(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME6(__VA_ARGS__)
+#define FIELD_FULL_NAME8(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME7(__VA_ARGS__)
+#define FIELD_FULL_NAME9(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME8(__VA_ARGS__)
+#define FIELD_FULL_NAME10(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME9(__VA_ARGS__)
+#define FIELD_FULL_NAME11(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME10(__VA_ARGS__)
+#define FIELD_FULL_NAME12(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME11(__VA_ARGS__)
+#define FIELD_FULL_NAME13(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME12(__VA_ARGS__)
+#define FIELD_FULL_NAME14(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME13(__VA_ARGS__)
+#define FIELD_FULL_NAME15(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME14(__VA_ARGS__)
+#define FIELD_FULL_NAME16(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME15(__VA_ARGS__)
+#define FIELD_FULL_NAME17(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME16(__VA_ARGS__)
+#define FIELD_FULL_NAME18(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME17(__VA_ARGS__)
+#define FIELD_FULL_NAME19(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME18(__VA_ARGS__)
+#define FIELD_FULL_NAME20(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME19(__VA_ARGS__)
+
+#define FIELD_FULL_NAMES_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
+    FIELD_FULL_NAME##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
+
+#define FIELD_FULL_NAMES(...) \
+    FIELD_FULL_NAMES_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
+
+
+#define GET_FOREIGN_KEY(_v1, _v2) \
+    InternalForeignKey{#_v1, _v2::referenceTable(), _v2::referenceField()}
+#define GET_FOREIGN_KEY0(...) static_assert(false && "Invalid number of GET_FOREIGN_KEYS(...) arguments! The number should be even!")
+#define GET_FOREIGN_KEY1(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2)
+#define GET_FOREIGN_KEY2(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY1(__VA_ARGS__)
+#define GET_FOREIGN_KEY3(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY2(__VA_ARGS__)
+#define GET_FOREIGN_KEY4(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY3(__VA_ARGS__)
+#define GET_FOREIGN_KEY5(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY4(__VA_ARGS__)
+#define GET_FOREIGN_KEY6(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY5(__VA_ARGS__)
+#define GET_FOREIGN_KEY7(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY6(__VA_ARGS__)
+#define GET_FOREIGN_KEY8(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY7(__VA_ARGS__)
+#define GET_FOREIGN_KEY9(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY8(__VA_ARGS__)
+#define GET_FOREIGN_KEY10(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY9(__VA_ARGS__)
+#define GET_FOREIGN_KEY11(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY10(__VA_ARGS__)
+#define GET_FOREIGN_KEY12(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY11(__VA_ARGS__)
+#define GET_FOREIGN_KEY13(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY12(__VA_ARGS__)
+#define GET_FOREIGN_KEY14(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY13(__VA_ARGS__)
+#define GET_FOREIGN_KEY15(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY14(__VA_ARGS__)
+#define GET_FOREIGN_KEY16(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY15(__VA_ARGS__)
+#define GET_FOREIGN_KEY17(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY16(__VA_ARGS__)
+#define GET_FOREIGN_KEY18(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY17(__VA_ARGS__)
+#define GET_FOREIGN_KEY19(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY18(__VA_ARGS__)
+#define GET_FOREIGN_KEY20(_v1, _v2, ...) GET_FOREIGN_KEY(_v1, _v2), GET_FOREIGN_KEY19(__VA_ARGS__)
+
+#define GET_FOREIGN_KEYS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
+    GET_FOREIGN_KEY##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
+
+#define GET_FOREIGN_KEYS(_v1, _v2, ...) \
+    GET_FOREIGN_KEYS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0)
+
+
+#define NULLABLE(__SqlType) \
+    ::epsql::db::Nullable<__SqlType>
+
+#define NOTNULL 2
+#define NOT_NULL(__SqlType) \
+    ::epsql::db::NotNull<__SqlType>
+
+
+#define FOREIGN_KEY0(...) static_assert(false && "Macro FOREIGN_KEY(...) must have at least 1 argument (see table.hpp)")
+#define FOREIGN_KEY1(__ReferenceField, ...) \
+    ::epsql::db::ForeignKey<NULLABLE(decltype(__ReferenceField)::ValueType)>
+#define FOREIGN_KEY2(__ReferenceField, __IsNullable) \
+    ::epsql::db::ForeignKeyDeduce<__IsNullable - 1>::Type<decltype(__ReferenceField)::ValueType>
+
+#define FOREIGN_KEY_(__ReferenceField, __IsNullable, n, ...) \
+    FOREIGN_KEY##n(__ReferenceField, __IsNullable)
+/**
+ *  Macro for creating foreign_key in table
+ *      accepts one or two arguments
+ *      __ReferenceField - first argument (required) is reference field ex. 'Users::Id' means
+ *                          reference to field 'Id' in table 'Users'
+ *      __FieldRelationType - optional argument, accepted values are NULL/NOTNULL
+ *                            NULL - if field could be Null
+ *                            NOTNULL - if field could not be Null
+ */
+#define FOREIGN_KEY(...) \
+    FOREIGN_KEY_(__VA_ARGS__, 2, 1, 0)
+
+
+#define DEFAULT0(...) static_assert(false && "Macro DEFAULT(...) must have at least 2 arguments [currently 0] (see table.hpp)")
+#define DEFAULT1(...) static_assert(false && "Macro DEFAULT(...) must have at least 2 arguments [currently 1] (see table.hpp)")
+#define DEFAULT2(__FieldType, __Value, ...)
+#define DEFAULT3(__FieldType, __Value, __IsNullable)
+
+#define DEFAULT_(__FieldType, __Value, __IsNullable, n, ...) \
+    DEFAULT##n(__FieldType, __Value, __IsNullable)
+/**
+ *  Macro for creating field with default value
+ *      accepts two or three arguments
+ *      __FieldType - first argument (required) is member type
+ *      __Value - second argument (required) is default value
+ *      __IsNullable - optional argument, accepted values are NULL/NOTNULL
+ *                     NULL - if field could be Null
+ *                     NOTNULL - if field could not be Null
+ */
+#define DEFAULT(...) \
+    DEFAULT_(__VA_ARGS__, 3, 2, 1, 0)
 
 /**
  *  Macro for table creation
  *      creates structure of given type with specified fields
  *
- *  __RecordName     - record name - singular
- *  __FieldName      - field name without quotes
- *  __FieldDataType  - stored data type
- *  __FieldNullType  - Nullable/NotNull - is value nullable or not
- *  ...              - the rest of structure params
+ *  __TableName          - table name
+ *  __FieldName          - field name without quotes
+ *  __FieldRelationType  - NULLABLE(type)/NOT_NULL(type)/FOREIGN_KEY(referenced field, <optional> NULLABLE/NOT_NULL)
+ *  ...                  - the rest of structure params
  *
  *  E.g. create table Users with fields Id, Email, Name, Password
  *
  *  CREATE_TABLE(User,
- *               Id,       int,         NotNull,
- *               Email,    std::string, NotNull,
- *               Name,     std::string, Nullable,
- *               Password, std::string, NotNull);
+ *               Id,       NOT_NULL(Int),
+ *               Email,    NOT_NULL(Text),
+ *               Name,     NULLABLE(Text),
+ *               Password, DEFAULT(Text, "Password", NotNull));
+ *
+ *  CREATE_TABLE(Thing,
+ *               Id,       NOT_NULL(Int),,
+ *               Name,     DEFAULT(Text, "Noname")),
+ *               UserId,   FOREIGN_KEY(Users::Id, NotNull));
  *
  */
-#define CREATE_TABLE(__RecordName, __FieldName, __FieldDataType, __FieldNullType, ...) \
-    struct __RecordName##s : public ::epsql::db::ReflectionGroup<__RecordName##s>, \
-                             public ::epsql::db::ITable \
+#define CREATE_TABLE(__TableName, __FieldName, __FieldRelationType, ...) \
+    struct __TableName : public ::epsql::db::ReflectionGroup<__TableName>, \
+                         public ::epsql::db::ITable \
     { \
-        __RecordName##s() : ReflectionGroup(NAME(__FieldName, __FieldDataType, __FieldNullType, __VA_ARGS__)) \
+        __TableName() : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         { \
-            reflectNames(PRINT(NAME(__FieldName, __FieldDataType, __FieldNullType, __VA_ARGS__))); \
-            reflectTypes(PRINT(TYPE(__FieldName, __FieldDataType, __FieldNullType, __VA_ARGS__))); \
+            reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(PRINTS(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
         } \
-        GET_FIELD(__RecordName, NAME(__FieldName, __FieldDataType, __FieldNullType, __VA_ARGS__)) \
-        virtual const char* name() const override { return #__RecordName "s"; } \
-        virtual std::vector<const char*> fields() const override { return fieldNames(); } \
+        GET_FIELDS(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+        virtual const char* name() const override { return #__TableName; } \
+        virtual const char* primaryKeyName() const override { return #__FieldName; } \
+        virtual std::vector<std::string> fieldFullNames() const override { return std::vector{ \
+            FIELD_FULL_NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)}; } \
+        virtual std::vector<const char*> fieldNames() const override { return memberNames(); } \
+        auto foreignKeys() const \
+        { \
+            struct InternalForeignKey { \
+                InternalForeignKey(const char* p1, const char* p2, const char* p3) \
+                    : field{p1} \
+                    , referenceTable{p2} \
+                    , referenceField{p3} \
+                {} \
+                const char* field; \
+                const char* referenceTable; \
+                const char* referenceField; \
+            }; \
+            return std::array{GET_FOREIGN_KEYS(__FieldName, __FieldRelationType, __VA_ARGS__)}; \
+        } \
     public: \
-        FIELD(__FieldName, __FieldDataType, __FieldNullType, __VA_ARGS__) \
+        FIELDS(__FieldName, __FieldRelationType, __VA_ARGS__) \
     }
 
 
@@ -198,12 +340,21 @@ public:
     virtual ~ITable() = default;
 
     virtual const char* name() const = 0;
-    virtual std::vector<const char*> fields() const = 0;
+    virtual const char* primaryKeyName() const = 0;
+    virtual std::vector<std::string> fieldFullNames() const = 0;
+    virtual std::vector<const char*> fieldNames() const = 0;
+};
+
+
+class ReflectionRegister
+{
+public:
+    virtual ~ReflectionRegister() = default;
 };
 
 
 template <typename T>
-class ReflectionGroup
+class ReflectionGroup : public ReflectionRegister
 {
 public:
     inline const char* typeOf(const char* name)
@@ -226,11 +377,7 @@ public:
             return nullptr;
 
         const auto itPos = it - m_names.begin();
-        if (utils::TypeOf<NotNull<U>>().type() == m_type[itPos])
-            return reinterpret_cast<NotNull<U>*>(m_position[itPos])->nonEmptyPtr();
-        else if (utils::TypeOf<Nullable<U>>().type() == m_type[itPos])
-            return reinterpret_cast<Nullable<U>*>(m_position[itPos])->nonEmptyPtr();
-        return nullptr;
+        return reinterpret_cast<ValueT<U>*>(m_position[itPos])->nonEmptyPtr();
     }
 
     template <typename U>
@@ -251,7 +398,7 @@ public:
         }
     }
 
-    inline static const auto& fieldNames() { return m_names; }
+    inline static const auto& memberNames() { return m_names; }
 
 protected:
     template <typename... Field>

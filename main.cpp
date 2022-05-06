@@ -12,21 +12,35 @@ using namespace std;
  *   DECLARE TABLES
  *
  *  - Use CREATE_TABLE macro to create new table
- *  - First argument is always record name and created table has always additional 's' letter at the end
- *  - Next arguments (group by 3) are: Field name, type and is null
+ *  - First argument is always table name
+ *  - Next arguments (group by 2) are: Field name, field database type
+ *  - First parameter (in this example 'Id') is always primary key
  *  - Single table can store max. 20 fields
+ *
+ *  Allowed database types:
+ *          NULLABLE(type)
+ *          NOT_NULL(type)
+ *          FOREIGN_KEY(referenced field 'Class::Field', <optional> NULL/NOTNULL - if field nullable/not nullable)
+ *                                                       default value is NULL
+ *          DEFAULT(type, value, <optional> NULL/NOTNULL)
+ *                               default value is NULL
+ *  Allowed types:
+ *      text:       Text
+ *      bool:       Boolean
+ *      arithmetic: Smallint, Int, Bigint,
+ *                  Real, Float8, Double
  */
-CREATE_TABLE(User,
-             Id,       int,         NotNull,
-             Email,    std::string, NotNull,
-             Name,     std::string, Nullable,
-             Password, std::string, NotNull,
-             Age,      float,       Nullable);
+CREATE_TABLE(Users,
+             Id,       NOT_NULL(Int),
+             Email,    NOT_NULL(Text),
+             Name,     NULLABLE(Text),
+             Password, NOT_NULL(Text),
+             Age,      NULLABLE(Real));
 
-CREATE_TABLE(Thing,
-             Id,       int,         NotNull,
-             UserId,   int,         Nullable,
-             Name,     std::string, NotNull);
+CREATE_TABLE(Things,
+             Id,       NOT_NULL(Int),
+             UserId,   FOREIGN_KEY(Users::Id, NOTNULL),
+             Name,     NOT_NULL(Text));
 
 int main()
 {
@@ -71,15 +85,15 @@ int main()
         std::cout << "    Create new Users record\n";
         auto user = sql.insert<Users>();
         user->Id = 1;
-        user->Email = std::string{"user@user.com"};
-        user->Name = std::string{"username"};
-        user->Password = std::string{"userpassword"};
+        user->Email = "user@user.com";
+        user->Name = "username";
+        user->Password = "userpassword";
 
         std::cout << "    Create new Things record\n";
         auto thing = sql.insert<Things>();
         thing->Id = 1;
-        thing->UserId = *user->Id;
-        thing->Name = std::string{"Thing!"};
+        thing->UserId = user->Id;
+        thing->Name = "Thing!";
 
         /* Use commit on object if it is ready to submit */
         std::cout << "    Insert user into [Users] locally\n";

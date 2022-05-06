@@ -8,6 +8,7 @@
 #include <optional>
 #include <vector>
 
+#include "query.hpp"
 #include "utils/typeof.hpp"
 
 
@@ -46,8 +47,13 @@ public:
 
     bool clean()
     {
-        std::cerr << "[DATABASE] Clean\n";
+        std::cerr << "[DATABASE] Clean all stored commits\n";
         return true;
+    }
+
+    void query(std::string sqlQuery)
+    {
+        std::cerr << "[DATABASE] SQL query to database '" << sqlQuery << "'\n";
     }
 
     template <typename Table>
@@ -60,7 +66,7 @@ public:
     template <typename Table>
     bool create()
     {
-        std::cerr << "Create table {" << utils::TypeOf<Table>().type() << "}\n";
+        std::cerr << CreateTableQuery<Table>{}.to_string() << "\n";
         return true;
     }
 

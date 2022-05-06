@@ -100,6 +100,19 @@ public:
         }
     }
 
+    inline bool query(std::string sqlQuery)
+    {
+        try
+        {
+            m_database->query(std::move(sqlQuery));
+            return true;
+        }
+        catch(std::exception&)
+        {
+            return false;
+        }
+    }
+
     template <typename Table>
     std::enable_if_t<std::is_base_of_v<db::ITable, Table>, bool> isExists()
     {
@@ -118,11 +131,7 @@ public:
     {
         try
         {
-            if (!m_database->isExists<Table>())
-            {
-                return m_database->create<Table>();
-            }
-            return true;
+            return m_database->create<Table>();
         }
         catch(std::exception&)
         {
@@ -135,11 +144,7 @@ public:
     {
         try
         {
-            if (m_database->isExists<Table>())
-            {
-                return m_database->remove<Table>();
-            }
-            return true;
+            return m_database->remove<Table>();
         }
         catch(std::exception&)
         {
