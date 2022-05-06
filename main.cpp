@@ -39,7 +39,7 @@ CREATE_TABLE(Users,
 
 CREATE_TABLE(Things,
              Id,       NOT_NULL(Int),
-             UserId,   FOREIGN_KEY(Users::Id, NOTNULL),
+             UserId,   FOREIGN_KEY(Users::Id),
              Name,     NOT_NULL(Text));
 
 int main()

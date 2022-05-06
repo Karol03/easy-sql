@@ -17,8 +17,8 @@ struct Value
 {
     virtual ~Value() = default;
     virtual void setNull() = 0;
-    virtual operator bool() const = 0;
-    virtual bool exists() const = 0;
+    virtual operator bool() const noexcept = 0;
+    virtual bool exists() const noexcept = 0;
 };
 
 
@@ -63,8 +63,8 @@ public:
     virtual inline T* ptr() override { return &value; }
     virtual inline T* nonEmptyPtr() override { return &value; }
 
-    virtual inline operator bool() const override { return true; }
-    virtual inline bool exists() const override { return true; }
+    virtual inline operator bool() const noexcept override { return true; }
+    virtual inline bool exists() const noexcept override { return true; }
     virtual inline void setNull() override { }
 
     inline static constexpr const char* name() { return "NOT NULL"; }
@@ -108,8 +108,8 @@ public:
     virtual inline T* ptr() override { return value ? &(*value) : nullptr; }
     virtual inline T* nonEmptyPtr() override { if (!value) value = T{}; return &(*value); }
 
-    virtual inline operator bool() const override { return value.has_value(); }
-    virtual inline bool exists() const override { return value.has_value(); }
+    virtual inline operator bool() const noexcept override { return value.has_value(); }
+    virtual inline bool exists() const noexcept override { return value.has_value(); }
     virtual inline void setNull() override { value = std::nullopt; }
 
     inline static constexpr const char* name() { return "NULL"; }
@@ -126,14 +126,45 @@ struct IForeignKey
     virtual ~IForeignKey() = default;
 };
 
-template <typename NullType, int Reference>
+template <typename NullType, int64_t Reference>
 struct ForeignKey : public IForeignKey, public NullType
 {
     ForeignKey() = default;
-    ForeignKey(const ForeignKey&) = default;
-    ForeignKey(ForeignKey&&) noexcept = default;
-    ForeignKey& operator=(const ForeignKey&) = default;
-    ForeignKey& operator=(ForeignKey&&) noexcept = default;
+
+    template <typename T, int64_t Ref,
+              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
+    ForeignKey(const ForeignKey<T, Ref>& fk) noexcept
+    {
+        if (fk.exists())
+            NullType::value = *fk;
+    }
+
+    template <typename T, int64_t Ref,
+              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
+    ForeignKey(ForeignKey<T, Ref>&& fk) noexcept
+    {
+        if (fk.exists())
+            NullType::value = *fk;
+        fk.setNull();
+    }
+
+    template <typename T, int64_t Ref,
+              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
+    ForeignKey& operator=(const ForeignKey<T, Ref>& fk) noexcept
+    {
+        if (fk.exists())
+            NullType::value = *fk;
+        return *this;
+    }
+    template <typename T, int64_t Ref,
+              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
+    ForeignKey& operator=(ForeignKey<T, Ref>&& fk) noexcept
+    {
+        if (fk.exists())
+            NullType::value = *fk;
+        fk.setNull();
+        return *this;
+    }
 
     ForeignKey(const NullType& value) : NullType{value} {}
     ForeignKey(NullType&& value) : NullType{std::move(value)} {}
@@ -142,6 +173,9 @@ struct ForeignKey : public IForeignKey, public NullType
 
     inline static constexpr const char* referenceTable() { return "Table"; }
     inline static constexpr const char* referenceField() { return "Field"; }
+
+private:
+    int64_t referenceId = std::abs(Reference);
 };
 
 
@@ -151,26 +185,23 @@ struct ForeignKeyDeducer {};
 template <>
 struct ForeignKeyDeducer<true>
 {
-    template <typename T, int Reference> using Type = ForeignKey<NotNull<T>, Reference>;
+    template <typename T, int64_t Reference> using Type = ForeignKey<NotNull<T>, Reference>;
 };
 
 template <>
 struct ForeignKeyDeducer<false>
 {
-    template <typename T, int Reference> using Type = ForeignKey<Nullable<T>, Reference>;
+    template <typename T, int64_t Reference> using Type = ForeignKey<Nullable<T>, Reference>;
 };
 
-template <int V>
+template <int64_t V>
 inline constexpr bool is_positive_v = (V > 0);
 
-template <int fieldUuid>
+template <int64_t fieldUuid>
 struct ForeignKeyDeduce
 {
     template <typename T>
     using Type = typename ForeignKeyDeducer<is_positive_v<fieldUuid>>::Type<T, fieldUuid>;
-
-private:
-    static constexpr bool is_positive() { return fieldUuid > 0; }
 };
 
 

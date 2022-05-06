@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "types.hpp"
+#include "utils/hash.hpp"
 #include "utils/stringcompare.hpp"
 #include "utils/typeof.hpp"
 #include "value.hpp"
@@ -236,9 +237,9 @@
 
 #define FOREIGN_KEY0(...) static_assert(false && "Macro FOREIGN_KEY(...) must have at least 1 argument (see table.hpp)")
 #define FOREIGN_KEY1(__ReferenceField, ...) \
-    ::epsql::db::ForeignKey<NULLABLE(decltype(__ReferenceField)::ValueType)>
+    ::epsql::db::ForeignKeyDeduce<-1 * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
 #define FOREIGN_KEY2(__ReferenceField, __IsNullable) \
-    ::epsql::db::ForeignKeyDeduce<__IsNullable - 1>::Type<decltype(__ReferenceField)::ValueType>
+    ::epsql::db::ForeignKeyDeduce<(__IsNullable - 1) * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
 
 #define FOREIGN_KEY_(__ReferenceField, __IsNullable, n, ...) \
     FOREIGN_KEY##n(__ReferenceField, __IsNullable)
