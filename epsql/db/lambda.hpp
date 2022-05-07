@@ -3,7 +3,6 @@
  */
 #pragma once
 
-#include "table.hpp"
 #include "lambda/field.hpp"
 #include "lambda/query.hpp"
 

@@ -3,38 +3,13 @@
  */
 #pragma once
 
-#include <array>
-#include <string>
 #include <optional>
 
-#include "types.hpp"
+#include "ivalue.hpp"
 
 
-namespace epsql::db
+namespace epsql::db::value
 {
-
-struct Value
-{
-    virtual ~Value() = default;
-    virtual void setNull() = 0;
-    virtual operator bool() const noexcept = 0;
-    virtual bool exists() const noexcept = 0;
-};
-
-
-template <typename T>
-struct ValueT : public Value
-{
-    virtual T& operator*() = 0;
-    virtual const T& operator*() const = 0;
-    virtual T* operator->() = 0;
-    virtual const T* operator->() const = 0;
-
-    virtual const T* ptr() const = 0;
-    virtual T* ptr() = 0;
-    virtual T* nonEmptyPtr() = 0;
-};
-
 
 template <typename T>
 struct NotNull : public ValueT<T>
@@ -120,89 +95,4 @@ protected:
     std::optional<T> value{std::nullopt};
 };
 
-
-struct IForeignKey
-{
-    virtual ~IForeignKey() = default;
-};
-
-template <typename NullType, int64_t Reference>
-struct ForeignKey : public IForeignKey, public NullType
-{
-    ForeignKey() = default;
-
-    template <typename T, int64_t Ref,
-              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
-    ForeignKey(const ForeignKey<T, Ref>& fk) noexcept
-    {
-        if (fk.exists())
-            NullType::value = *fk;
-    }
-
-    template <typename T, int64_t Ref,
-              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
-    ForeignKey(ForeignKey<T, Ref>&& fk) noexcept
-    {
-        if (fk.exists())
-            NullType::value = *fk;
-        fk.setNull();
-    }
-
-    template <typename T, int64_t Ref,
-              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
-    ForeignKey& operator=(const ForeignKey<T, Ref>& fk) noexcept
-    {
-        if (fk.exists())
-            NullType::value = *fk;
-        return *this;
-    }
-    template <typename T, int64_t Ref,
-              typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
-    ForeignKey& operator=(ForeignKey<T, Ref>&& fk) noexcept
-    {
-        if (fk.exists())
-            NullType::value = *fk;
-        fk.setNull();
-        return *this;
-    }
-
-    ForeignKey(const NullType& value) : NullType{value} {}
-    ForeignKey(NullType&& value) : NullType{std::move(value)} {}
-    ForeignKey& operator=(const NullType& value) { NullType::operator=(value); return *this; }
-    ForeignKey& operator=(NullType&& value) noexcept { NullType::operator=(std::move(value)); return *this; }
-
-    inline static constexpr const char* referenceTable() { return "Table"; }
-    inline static constexpr const char* referenceField() { return "Field"; }
-
-private:
-    int64_t referenceId = std::abs(Reference);
-};
-
-
-template <bool isNullable>
-struct ForeignKeyDeducer {};
-
-template <>
-struct ForeignKeyDeducer<true>
-{
-    template <typename T, int64_t Reference> using Type = ForeignKey<NotNull<T>, Reference>;
-};
-
-template <>
-struct ForeignKeyDeducer<false>
-{
-    template <typename T, int64_t Reference> using Type = ForeignKey<Nullable<T>, Reference>;
-};
-
-template <int64_t V>
-inline constexpr bool is_positive_v = (V > 0);
-
-template <int64_t fieldUuid>
-struct ForeignKeyDeduce
-{
-    template <typename T>
-    using Type = typename ForeignKeyDeducer<is_positive_v<fieldUuid>>::Type<T, fieldUuid>;
-};
-
-
-}  // namespace epsql::db
+}  // namespace epsql::db::value

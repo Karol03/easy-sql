@@ -5,10 +5,9 @@
 
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <vector>
 
-#include "query.hpp"
+#include "query/queries.hpp"
 #include "utils/typeof.hpp"
 
 
@@ -66,7 +65,7 @@ public:
     template <typename Table>
     bool create()
     {
-        std::cerr << CreateTableQuery<Table>{}.to_string() << "\n";
+        std::cout << query::CreateTableQuery<Table>{}.to_string() << "\n";
         return true;
     }
 

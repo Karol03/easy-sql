@@ -15,18 +15,25 @@ add_executable(easy-sql
 
     epsql/db/database.hpp
     epsql/db/lambda.hpp
-    epsql/db/query.hpp
     epsql/db/record.hpp
-    epsql/db/table.hpp
     epsql/db/transaction.hpp
-    epsql/db/types.hpp
-    epsql/db/value.hpp
 
     epsql/db/lambda/field.hpp
     epsql/db/lambda/operation.hpp
     epsql/db/lambda/query.hpp
 
+    epsql/db/table/reflectiongroup.hpp
+    epsql/db/table/table.hpp
+    epsql/db/table/types.hpp
+
+    epsql/db/query/createtable.hpp
+    epsql/db/query/queries.hpp
+    epsql/db/query/query.hpp
+
+    epsql/db/value/foreignkey.hpp
+    epsql/db/value/ivalue.hpp
+    epsql/db/value/value.hpp
+
     epsql/utils/hash.hpp
-    epsql/utils/stringcompare.hpp
     epsql/utils/typeof.hpp
 )

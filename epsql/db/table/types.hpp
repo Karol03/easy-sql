@@ -29,7 +29,7 @@ using Array = std::vector<T>;
 
 
 
-namespace epsql::db
+namespace epsql::db::table
 {
 
 template <typename T> inline const char* nameOf() { return "UNKNOWN"; }
@@ -44,4 +44,4 @@ template <> inline const char* nameOf<Boolean>() { return "Boolean"; }
 template <> inline const char* nameOf<Float8>() { return "Double precision"; }
 template <> inline const char* nameOf<Real>() { return "Real"; }
 
-}  // namespace epsql::db
+}  // namespace epsql::db::table

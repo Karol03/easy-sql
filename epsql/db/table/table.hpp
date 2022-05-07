@@ -3,16 +3,15 @@
  */
 #pragma once
 
-#include <algorithm>
 #include <cstring>
 #include <type_traits>
 #include <vector>
 
-#include "types.hpp"
+#include "db/value/foreignkey.hpp"
+#include "db/value/value.hpp"
+#include "reflectiongroup.hpp"
 #include "utils/hash.hpp"
-#include "utils/stringcompare.hpp"
 #include "utils/typeof.hpp"
-#include "value.hpp"
 
 
 #define PRINT(_v1) #_v1
@@ -135,6 +134,36 @@
     FIELDS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
 
 
+#define GET_FIELD_NAME(_v1, _v2) #_v1 "::" #_v2
+#define GET_FIELD_NAME0(...) static_assert(false && "Invalid number of GET_FIELD_NAMES(...) arguments! The number should be even!")
+#define GET_FIELD_NAME1(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2)
+#define GET_FIELD_NAME2(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME1(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME3(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME2(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME4(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME3(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME5(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME4(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME6(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME5(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME7(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME6(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME8(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME7(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME9(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME8(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME10(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME9(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME11(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME10(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME12(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME11(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME13(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME12(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME14(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME13(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME15(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME14(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME16(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME15(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME17(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME16(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME18(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME17(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME19(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME18(_v1, __VA_ARGS__)
+#define GET_FIELD_NAME20(_v1, _v2, ...) GET_FIELD_NAME(_v1, _v2), GET_FIELD_NAME19(_v1, __VA_ARGS__)
+
+#define GET_FIELD_NAMES_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21, n, ...) \
+    GET_FIELD_NAME##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21)
+
+#define GET_FIELD_NAMES(_v1, ...) \
+    GET_FIELD_NAMES_(_v1, __VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+
 #define GET_FIELD(_v1, _v2) inline constexpr static const char* _v2##NameGetter() { return #_v1 "::" #_v2; }
 #define GET_FIELD0(...) static_assert(false && "Invalid number of GET_FIELDS(...) arguments! The number should be even!")
 #define GET_FIELD1(_v1, _v2, ...) GET_FIELD(_v1, _v2);
@@ -166,7 +195,7 @@
 
 
 #define FIELD_FULL_NAME(_v1, _v2) \
-    (std::string{#_v1 " "} + ::epsql::db::nameOf<_v2::ValueType>() + " " + _v2::name())
+    (std::string{#_v1 " "} + ::epsql::db::table::nameOf<_v2::ValueType>() + " " + _v2::name())
 #define FIELD_FULL_NAME0(...) static_assert(false && "Invalid number of FIELD_FULL_NAME(...) arguments! The number should be even!")
 #define FIELD_FULL_NAME1(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2)
 #define FIELD_FULL_NAME2(_v1, _v2, ...) FIELD_FULL_NAME(_v1, _v2), FIELD_FULL_NAME1(__VA_ARGS__)
@@ -228,18 +257,18 @@
 
 
 #define NULLABLE(__SqlType) \
-    ::epsql::db::Nullable<__SqlType>
+    ::epsql::db::value::Nullable<__SqlType>
 
 #define NOTNULL 2
 #define NOT_NULL(__SqlType) \
-    ::epsql::db::NotNull<__SqlType>
+    ::epsql::db::value::NotNull<__SqlType>
 
 
 #define FOREIGN_KEY0(...) static_assert(false && "Macro FOREIGN_KEY(...) must have at least 1 argument (see table.hpp)")
 #define FOREIGN_KEY1(__ReferenceField, ...) \
-    ::epsql::db::ForeignKeyDeduce<-1 * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
+    ::epsql::db::value::ForeignKeyDeduce<-1 * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
 #define FOREIGN_KEY2(__ReferenceField, __IsNullable) \
-    ::epsql::db::ForeignKeyDeduce<(__IsNullable - 1) * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
+    ::epsql::db::value::ForeignKeyDeduce<(__IsNullable - 1) * static_cast<int64_t>(::epsql::utils::Hash::hash(#__ReferenceField))>::Type<decltype(__ReferenceField)::ValueType>
 
 #define FOREIGN_KEY_(__ReferenceField, __IsNullable, n, ...) \
     FOREIGN_KEY##n(__ReferenceField, __IsNullable)
@@ -299,13 +328,18 @@
  *
  */
 #define CREATE_TABLE(__TableName, __FieldName, __FieldRelationType, ...) \
-    struct __TableName : public ::epsql::db::ReflectionGroup<__TableName>, \
-                         public ::epsql::db::ITable \
+    struct __TableName : public ::epsql::db::table::ReflectionGroup<__TableName>, \
+                         public ::epsql::db::table::ITable \
     { \
         __TableName() : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         { \
             reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
             reflectTypes(PRINTS(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            if (!isReferenced) \
+            { \
+                assignAll(GET_FIELD_NAMES(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+                isReferenced = true; \
+            } \
         } \
         GET_FIELDS(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         virtual const char* name() const override { return #__TableName; } \
@@ -332,7 +366,7 @@
     }
 
 
-namespace epsql::db
+namespace epsql::db::table
 {
 
 class ITable
@@ -346,88 +380,4 @@ public:
     virtual std::vector<const char*> fieldNames() const = 0;
 };
 
-
-class ReflectionRegister
-{
-public:
-    virtual ~ReflectionRegister() = default;
-};
-
-
-template <typename T>
-class ReflectionGroup : public ReflectionRegister
-{
-public:
-    inline const char* typeOf(const char* name)
-    {
-        auto it = std::find_if(m_names.begin(), m_names.end(),
-                               [&name](const auto* n) { return strcmp(name, n) == 0; });
-        if (it == m_names.end())
-           return "";
-
-        const auto itPos = it - m_names.begin();
-        return m_types[itPos];
-    }
-
-    template <typename U>
-    inline U* get(const char* name)
-    {
-        auto it = std::find_if(m_names.begin(), m_names.end(),
-                               [&name](const auto* n) { return strcmp(name, n) == 0; });
-        if (it == m_names.end())
-            return nullptr;
-
-        const auto itPos = it - m_names.begin();
-        return reinterpret_cast<ValueT<U>*>(m_position[itPos])->nonEmptyPtr();
-    }
-
-    template <typename U>
-    inline void set(const char* name, const U& value)
-    {
-        if (auto* field = get<U>(name))
-            *field = value;
-    }
-
-    inline void setNull(const char* name)
-    {
-        auto it = std::find_if(m_names.begin(), m_names.end(),
-                               [&name](const auto* n) { return strcmp(name, n) == 0; });
-        if (it != m_names.end())
-        {
-            const auto itPos = it - m_names.begin();
-            ((Value*)m_position[itPos])->setNull();
-        }
-    }
-
-    inline static const auto& memberNames() { return m_names; }
-
-protected:
-    template <typename... Field>
-    ReflectionGroup(Field&&... field)
-        : m_position{((void*)&field)...}
-        , m_type{utils::TypeOf<std::remove_reference_t<std::remove_cv_t<Field>>>().type()...}
-    {}
-
-    template <typename... FieldName>
-    inline void reflectNames(FieldName&&... name)
-    {
-        if (m_position.size() != m_names.size())
-            m_names = std::vector{name...};
-    }
-
-   template <typename... FieldName>
-   inline void reflectTypes(FieldName&&... types)
-   {
-       if (m_position.size() != m_types.size())
-           m_types = std::vector{types...};
-   }
-
-private:
-    std::vector<void*> m_position = {};
-    std::vector<std::size_t> m_type = {};
-
-    static inline std::vector<const char*> m_names = {};
-    static inline std::vector<const char*> m_types = {};
-};
-
-}  // namespace epsql::db
+}  // namespace epsql::db::table

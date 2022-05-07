@@ -9,7 +9,8 @@
 #include "db/database.hpp"
 #include "db/lambda.hpp"
 #include "db/record.hpp"
-#include "db/table.hpp"
+#include "db/table/table.hpp"
+#include "db/table/types.hpp"
 #include "db/transaction.hpp"
 
 
@@ -114,7 +115,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>, bool> isExists()
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>, bool> isExists()
     {
         try
         {
@@ -127,7 +128,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>, bool> create()
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>, bool> create()
     {
         try
         {
@@ -140,7 +141,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>, bool> remove()
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>, bool> remove()
     {
         try
         {
@@ -153,7 +154,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>, std::size_t> size()
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>, std::size_t> size()
     {
         try
         {
@@ -166,7 +167,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     db::Record<Table>> insert()
     {
         try
@@ -180,7 +181,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     db::Record<Table>> find(db::lambda::Query query)
     {
         try
@@ -199,7 +200,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     std::vector<db::Record<Table>>> find(db::lambda::Query query, std::size_t limit)
     {
         try
@@ -219,7 +220,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     db::Record<Table>> findLast(db::lambda::Query query)
     {
         try
@@ -238,7 +239,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     std::vector<db::Record<Table>>> findLast(db::lambda::Query query, std::size_t limit)
     {
         try
@@ -258,7 +259,7 @@ public:
     }
 
     template <typename Table>
-    std::enable_if_t<std::is_base_of_v<db::ITable, Table>,
+    std::enable_if_t<std::is_base_of_v<db::table::ITable, Table>,
     std::vector<db::Record<Table>>> findAll(db::lambda::Query query)
     {
         try
