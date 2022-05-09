@@ -8,10 +8,12 @@
 
 #include "db/database.hpp"
 #include "db/lambda.hpp"
+#include "db/postgres.hpp"
 #include "db/record.hpp"
 #include "db/table/table.hpp"
 #include "db/table/types.hpp"
 #include "db/transaction.hpp"
+#include "errorstream.hpp"
 
 
 namespace epsql
@@ -21,11 +23,27 @@ class PostgreSQL
 {
 public:
     PostgreSQL()
-        : m_database{db::Database::create()}
+        : m_database{db::Database<db::Postgres>::createInstance()}
+        , m_errorStream{std::make_shared<SinkStream>()}
     {}
 
     PostgreSQL(std::string connectionString)
-        : m_database{db::Database::create()}
+        : m_database{db::Database<db::Postgres>::createInstance()}
+        , m_errorStream{std::make_shared<SinkStream>()}
+    {
+        connect(std::move(connectionString));
+    }
+
+    template <typename ErrorStream, typename = std::enable_if_t<std::is_base_of_v<std::ostream, ErrorStream>>>
+    PostgreSQL(std::shared_ptr<ErrorStream> errorStream)
+        : m_database{db::Database<db::Postgres>::createInstance()}
+        , m_errorStream{std::move(errorStream)}
+    {}
+
+    template <typename ErrorStream, typename = std::enable_if_t<std::is_base_of_v<std::ostream, ErrorStream>>>
+    PostgreSQL(std::string connectionString, std::shared_ptr<ErrorStream> errorStream)
+        : m_database{db::Database<db::Postgres>::createInstance()}
+        , m_errorStream{std::move(errorStream)}
     {
         connect(std::move(connectionString));
     }
@@ -45,8 +63,9 @@ public:
                 return m_database->connect(std::move(connectionString));
             return true;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -59,8 +78,9 @@ public:
                 return m_database->disconnect();
             return true;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -71,8 +91,9 @@ public:
         {
             return m_database->isConnected();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -83,8 +104,9 @@ public:
         {
             return m_database->push();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -95,8 +117,9 @@ public:
         {
             return m_database->clean();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -105,11 +128,11 @@ public:
     {
         try
         {
-            m_database->query(std::move(sqlQuery));
-            return true;
+            return m_database->query(std::move(sqlQuery)).isSuccess();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -121,8 +144,9 @@ public:
         {
             return m_database->isExists<Table>();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -134,8 +158,9 @@ public:
         {
             return m_database->create<Table>();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -147,8 +172,9 @@ public:
         {
             return m_database->remove<Table>();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return false;
         }
     }
@@ -160,8 +186,9 @@ public:
         {
             return m_database->size<Table>();
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return 0ull;
         }
     }
@@ -172,10 +199,13 @@ public:
     {
         try
         {
-            return db::Record<Table>(openTransaction(), Table{});
+            auto result = db::Record<Table>(openTransaction());
+            result.create();
+            return result;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return db::Record<Table>(openInvalidTransaction());
         }
     }
@@ -193,8 +223,9 @@ public:
             else
                 return db::Record<Table>(openInvalidTransaction());
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return db::Record<Table>(openInvalidTransaction());
         }
     }
@@ -213,8 +244,9 @@ public:
             }
             return result;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return {};
         }
     }
@@ -232,8 +264,9 @@ public:
             else
                 return db::Record<Table>(openInvalidTransaction());
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return db::Record<Table>(openInvalidTransaction());
         }
     }
@@ -252,8 +285,9 @@ public:
             }
             return result;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return {};
         }
     }
@@ -272,8 +306,9 @@ public:
             }
             return result;
         }
-        catch(std::exception&)
+        catch(std::exception& e)
         {
+            (*m_errorStream) << "ERROR: " << e.what() << '\n';
             return {};
         }
     }
@@ -286,12 +321,13 @@ private:
 
     inline db::Transaction openInvalidTransaction()
     {
-        auto database = db::Database::create();
+        auto database = db::Database<db::Postgres>::createInstance();
         return db::Transaction{database->weak_from_this()};
     }
 
 private:
-    std::shared_ptr<db::Database> m_database;
+    std::shared_ptr<db::Database<db::Postgres>> m_database;
+    std::shared_ptr<std::ostream> m_errorStream;
 };
 
 }  // namespace epsql

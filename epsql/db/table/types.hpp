@@ -34,14 +34,21 @@ namespace epsql::db::table
 
 template <typename T> inline const char* nameOf() { return "UNKNOWN"; }
 template <> inline const char* nameOf<Text>() { return "Text"; }
-
 template <> inline const char* nameOf<Smallint>() { return "Smallint"; }
 template <> inline const char* nameOf<Int>() { return "Int"; }
 template <> inline const char* nameOf<Bigint>() { return "Bigint"; }
-
 template <> inline const char* nameOf<Boolean>() { return "Boolean"; }
-
 template <> inline const char* nameOf<Float8>() { return "Double precision"; }
 template <> inline const char* nameOf<Real>() { return "Real"; }
+
+
+template <typename T> inline std::string getValue(const T&) { return "NULL"; }
+template <> inline std::string getValue(const Smallint& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Int& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Bigint& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Real& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Float8& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Boolean& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Text& value) { return std::string{"'"} + value + "'"; }
 
 }  // namespace epsql::db::table

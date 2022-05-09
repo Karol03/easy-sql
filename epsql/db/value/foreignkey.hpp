@@ -20,7 +20,7 @@ struct IForeignKey
 };
 
 template <typename NullType, int64_t Reference>
-struct ForeignKey : public IForeignKey, public NullType
+struct ForeignKey : public NullType, public IForeignKey
 {
     ForeignKey() = default;
 

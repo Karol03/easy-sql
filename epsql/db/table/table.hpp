@@ -74,7 +74,7 @@
     NAMES_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0, 0)
 
 
-#define TYPE(_v2) _v2::ValueType
+#define TYPE(_v2) ::epsql::utils::TypeOf<_v2::ValueType>().type()
 #define TYPE0(...) static_assert(false && "Invalid number of TYPES(...) arguments! The number should be even!")
 #define TYPE1(_v1, _v2, ...) TYPE(_v2)
 #define TYPE2(_v1, _v2, ...) TYPE(_v2), TYPE1(__VA_ARGS__)
@@ -132,6 +132,66 @@
 
 #define FIELDS(...) \
     FIELDS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
+
+
+#define COPY_FIELD(_v1) this->_v1 = table._v1
+#define COPY_FIELD0(...) static_assert(false && "Invalid number of COPY_FIELDS(...) arguments! The number should be bigger than zero!")
+#define COPY_FIELD1(_v1, ...) COPY_FIELD(_v1);
+#define COPY_FIELD2(_v1, ...) COPY_FIELD(_v1); COPY_FIELD1(__VA_ARGS__)
+#define COPY_FIELD3(_v1, ...) COPY_FIELD(_v1); COPY_FIELD2(__VA_ARGS__)
+#define COPY_FIELD4(_v1, ...) COPY_FIELD(_v1); COPY_FIELD3(__VA_ARGS__)
+#define COPY_FIELD5(_v1, ...) COPY_FIELD(_v1); COPY_FIELD4(__VA_ARGS__)
+#define COPY_FIELD6(_v1, ...) COPY_FIELD(_v1); COPY_FIELD5(__VA_ARGS__)
+#define COPY_FIELD7(_v1, ...) COPY_FIELD(_v1); COPY_FIELD6(__VA_ARGS__)
+#define COPY_FIELD8(_v1, ...) COPY_FIELD(_v1); COPY_FIELD7(__VA_ARGS__)
+#define COPY_FIELD9(_v1, ...) COPY_FIELD(_v1); COPY_FIELD8(__VA_ARGS__)
+#define COPY_FIELD10(_v1, ...) COPY_FIELD(_v1); COPY_FIELD9(__VA_ARGS__)
+#define COPY_FIELD11(_v1, ...) COPY_FIELD(_v1); COPY_FIELD10(__VA_ARGS__)
+#define COPY_FIELD12(_v1, ...) COPY_FIELD(_v1); COPY_FIELD11(__VA_ARGS__)
+#define COPY_FIELD13(_v1, ...) COPY_FIELD(_v1); COPY_FIELD12(__VA_ARGS__)
+#define COPY_FIELD14(_v1, ...) COPY_FIELD(_v1); COPY_FIELD13(__VA_ARGS__)
+#define COPY_FIELD15(_v1, ...) COPY_FIELD(_v1); COPY_FIELD14(__VA_ARGS__)
+#define COPY_FIELD16(_v1, ...) COPY_FIELD(_v1); COPY_FIELD15(__VA_ARGS__)
+#define COPY_FIELD17(_v1, ...) COPY_FIELD(_v1); COPY_FIELD16(__VA_ARGS__)
+#define COPY_FIELD18(_v1, ...) COPY_FIELD(_v1); COPY_FIELD17(__VA_ARGS__)
+#define COPY_FIELD19(_v1, ...) COPY_FIELD(_v1); COPY_FIELD18(__VA_ARGS__)
+#define COPY_FIELD20(_v1, ...) COPY_FIELD(_v1); COPY_FIELD19(__VA_ARGS__)
+
+#define COPY_FIELDS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20, n, ...) \
+    COPY_FIELD##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20)
+
+#define COPY_FIELDS(...) \
+    COPY_FIELDS_(__VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
+
+
+#define COMPARE_FIELD(_v1, _v2) (compare(this->_v2, _v1._v2))
+#define COMPARE_FIELD0(...) static_assert(false && "Invalid number of COMPARE_FIELDS(...) arguments! The number should be even!")
+#define COMPARE_FIELD1(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2)
+#define COMPARE_FIELD2(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD1(_v1, __VA_ARGS__)
+#define COMPARE_FIELD3(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD2(_v1, __VA_ARGS__)
+#define COMPARE_FIELD4(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD3(_v1, __VA_ARGS__)
+#define COMPARE_FIELD5(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD4(_v1, __VA_ARGS__)
+#define COMPARE_FIELD6(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD5(_v1, __VA_ARGS__)
+#define COMPARE_FIELD7(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD6(_v1, __VA_ARGS__)
+#define COMPARE_FIELD8(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD7(_v1, __VA_ARGS__)
+#define COMPARE_FIELD9(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD8(_v1, __VA_ARGS__)
+#define COMPARE_FIELD10(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD9(_v1, __VA_ARGS__)
+#define COMPARE_FIELD11(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD10(_v1, __VA_ARGS__)
+#define COMPARE_FIELD12(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD11(_v1, __VA_ARGS__)
+#define COMPARE_FIELD13(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD12(_v1, __VA_ARGS__)
+#define COMPARE_FIELD14(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD13(_v1, __VA_ARGS__)
+#define COMPARE_FIELD15(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD14(_v1, __VA_ARGS__)
+#define COMPARE_FIELD16(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD15(_v1, __VA_ARGS__)
+#define COMPARE_FIELD17(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD16(_v1, __VA_ARGS__)
+#define COMPARE_FIELD18(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD17(_v1, __VA_ARGS__)
+#define COMPARE_FIELD19(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD18(_v1, __VA_ARGS__)
+#define COMPARE_FIELD20(_v1, _v2, ...) COMPARE_FIELD(_v1, _v2) && COMPARE_FIELD19(_v1, __VA_ARGS__)
+
+#define COMPARE_FIELDS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21, n, ...) \
+    COMPARE_FIELD##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21)
+
+#define COMPARE_FIELDS(_v1, ...) \
+    COMPARE_FIELDS_(_v1, __VA_ARGS__, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
 
 #define GET_FIELD_NAME(_v1, _v2) #_v1 "::" #_v2
@@ -334,13 +394,44 @@
         __TableName() : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         { \
             reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
-            reflectTypes(PRINTS(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__)); \
             if (!isReferenced) \
             { \
-                assignAll(GET_FIELD_NAMES(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+                assignAll(::epsql::utils::TypeOf<__TableName>().type(), \
+                          #__TableName, \
+                          GET_FIELD_NAMES(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
                 isReferenced = true; \
             } \
         } \
+        __TableName(const __TableName& table) : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+        { \
+            reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__)); \
+            COPY_FIELDS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+        } \
+        __TableName& operator=(const __TableName& table) \
+        { \
+            reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__)); \
+            COPY_FIELDS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+            return *this; \
+        } \
+        __TableName(__TableName&& table) : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+        { \
+            reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__)); \
+            COPY_FIELDS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+        } \
+        __TableName& operator=(__TableName&& table) \
+        { \
+            reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+            reflectTypes(TYPES(__FieldName, __FieldRelationType, __VA_ARGS__)); \
+            COPY_FIELDS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
+            return *this; \
+        } \
+        inline bool operator==(const __TableName& table) const { return COMPARE_FIELDS(table, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)); } \
+        inline bool operator!=(const __TableName& table) const { return !operator==(table); } \
+        \
         GET_FIELDS(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         virtual const char* name() const override { return #__TableName; } \
         virtual const char* primaryKeyName() const override { return #__FieldName; } \
@@ -363,7 +454,7 @@
         } \
     public: \
         FIELDS(__FieldName, __FieldRelationType, __VA_ARGS__) \
-    }
+    }; struct __Table##__TableName##Inializer {  __Table##__TableName##Inializer() { (void)(__TableName{}); } } __table##__TableName##Inializer
 
 
 namespace epsql::db::table

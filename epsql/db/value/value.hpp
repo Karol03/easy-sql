@@ -25,6 +25,7 @@ public:
     NotNull(const NotNull&) = default;
     NotNull& operator=(const NotNull&) = default;
     NotNull(NotNull&&) noexcept = default;
+
     NotNull& operator=(NotNull&&) noexcept = default;
     NotNull& operator=(T& pvalue) { value = pvalue; return *this; }
     NotNull& operator=(T&& pvalue) noexcept { value = std::move(pvalue); return *this; }
@@ -94,5 +95,42 @@ public:
 protected:
     std::optional<T> value{std::nullopt};
 };
+
+
+template <typename T>
+inline bool compare(const Nullable<T>& lhs, const NotNull<T>& rhs)
+{
+    return lhs.exists() && (*lhs == *rhs);
+}
+
+template <typename T>
+inline bool compare(const NotNull<T>& lhs, const Nullable<T>& rhs)
+{
+    return rhs.exists() && (*lhs == *rhs);
+}
+
+template <typename T>
+inline bool compare(const NotNull<T>& lhs, const NotNull<T>& rhs)
+{
+    return *lhs == *rhs;
+}
+
+template <typename T>
+inline bool compare(const Nullable<T>& lhs, const Nullable<T>& rhs)
+{
+    return (!lhs && !rhs) || (lhs && rhs && (*lhs == *rhs));
+}
+
+template <typename T>
+inline bool compare(const NotNull<T>& lhs, const T& rhs)
+{
+    return *lhs == rhs;
+}
+
+template <typename T>
+inline bool compare(const Nullable<T>& lhs, const T& rhs)
+{
+    return lhs && (*lhs == rhs);
+}
 
 }  // namespace epsql::db::value

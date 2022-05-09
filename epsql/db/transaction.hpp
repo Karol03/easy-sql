@@ -4,6 +4,8 @@
 #pragma once
 
 #include <inttypes.h>
+#include <string>
+#include <vector>
 
 #include "database.hpp"
 
@@ -15,34 +17,55 @@ template <typename T>
 class Create
 {
 public:
-    Create(T& value) : created{&value} {}
+    Create(const T& value) : created{value} {}
+    Create(const Create&) = delete;
+    Create& operator=(const Create&) = delete;
+    Create(Create&&) = default;
+    Create& operator=(Create&&) = default;
 
 public:
-    T* created;
+    T created{};
 };
 
 template <typename T>
 class Update
 {
 public:
-    Update(T& value) : updated{&value} {}
+    Update(const T& value, std::string primaryKey, std::vector<std::string> changedFieldsList)
+        : updated{value}
+        , primaryKey{std::move(primaryKey)}
+        , changedFieldsList{std::move(changedFieldsList)}
+    {}
+    Update(const Update&) = delete;
+    Update& operator=(const Update&) = delete;
+    Update(Update&&) = default;
+    Update& operator=(Update&&) = default;
 
 public:
-    T* updated;
+    T updated{};
+    std::string primaryKey{};
+    std::vector<std::string> changedFieldsList;
 };
 
+template <typename T>
 class Delete
 {
 public:
-    uint64_t id{};
-    uint64_t tableId{};
+    Delete(const T& value) : deleted{value} {}
+    Delete(const Delete&) = delete;
+    Delete& operator=(const Delete&) = delete;
+    Delete(Delete&&) = default;
+    Delete& operator=(Delete&&) = default;
+
+public:
+    T deleted{};
 };
 
 
 class Transaction
 {
 public:
-    Transaction(std::weak_ptr<Database> database)
+    Transaction(std::weak_ptr<DatabaseTransaction> database)
         : m_database{database}
     {}
 
@@ -66,10 +89,11 @@ public:
             database->update(std::move(record));
     }
 
-    inline void commit(Delete record)
+    template <typename Table>
+    inline void commit(Delete<Table> record)
     {
         if (auto database = m_database.lock())
-            database->remove(record.id, record.tableId);
+            database->remove(std::move(record));
     }
 
     inline Transaction clone()
@@ -78,7 +102,7 @@ public:
     }
 
 private:
-    std::weak_ptr<Database> m_database;
+    std::weak_ptr<DatabaseTransaction> m_database;
 };
 
 }  // namespace epsql::db

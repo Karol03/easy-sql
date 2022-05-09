@@ -35,116 +35,155 @@ CREATE_TABLE(Users,
              Email,    NOT_NULL(Text),
              Name,     NULLABLE(Text),
              Password, NOT_NULL(Text),
-             Age,      NULLABLE(Real));
+             Age,      NULLABLE(Smallint));
 
 CREATE_TABLE(Things,
              Id,       NOT_NULL(Int),
              UserId,   FOREIGN_KEY(Users::Id),
              Name,     NOT_NULL(Text));
 
+
+
+void Step1_HowToConnectDatabase(epsql::PostgreSQL& sql)
+{
+    std::cout << "\t=== Step1_HowToConnectDatabase ===\n";
+    if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
+                     "hostaddr = 127.0.0.1 port = 5432"))
+    {
+        throw std::runtime_error{"Failed to connect to the database\n"};
+    }
+}
+
+
+void Step2_HowToCreateDefinedTables(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step2_HowToCreateDefinedTables ===\n";
+    if (!sql.create<Users>())
+        throw std::runtime_error{"Failed to create table 'Users'\n"};
+    if (!sql.create<Things>())
+        throw std::runtime_error{"Failed to create table 'Things'\n"};
+    /* If table already existed, nothing happens - no recreation, no exception */
+}
+
+
+void Step3_HowToCreateNewRecordInTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step3_HowToCreateNewRecordInTable ===\n";
+    auto user = sql.insert<Users>();
+    user->Id = 1;
+    user->Email = "user@user.com";
+    user->Name = "username";
+    user->Password = "userpassword";
+
+    auto thing = sql.insert<Things>();
+    thing->Id = 1;
+    thing->UserId = user->Id;
+    thing->Name = "Thing!";
+
+    user.commit();  // save user record changes
+    thing.commit(); // save thing record changes
+
+    sql.push();     // push changes
+}
+
+
+void Step4_HowToUpdateRecordInTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step4_HowToUpdateRecordInTable ===\n";
+    auto user = sql.insert<Users>();
+    user->Id = 2;
+    user->Email = "user@user.com";
+    user->Name = "User2";
+    user->Password = "User2Password";
+
+    user.commit();  // save user record changes
+    sql.push();     // push changes
+
+    user->Email = "user2mail@user.com";
+    user.commit();  // update user email
+
+    user->Password = "newStronGP4ssword87!";
+    user.commit();  // update user password
+
+    user->Password = "13NewEvenStronGeRP4ssword!52";
+    user.commit();  // update user password once again
+
+    sql.push();     // push changes
+}
+
+
+void Step5_HowToRemoveRecordInTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step5_HowToRemoveRecordInTable ===\n";
+    auto user = sql.insert<Users>();
+    user->Id = 3;
+    user->Email = "user3@user.com";
+    user->Name = "User3";
+    user->Password = "User3Password";
+
+    user.commit();
+    sql.push();
+
+    user.remove();
+    user.commit();
+    sql.push();
+}
+
+
+void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step6_HowToFindRecordInTable ===\n";
+    auto user = sql.find<Users>(where({     // find single record in 'Users' table
+        auto name = Field(Users::Name);     // declare fields using Field(...) macro
+        return name.startsWith("user");     // find record which field 'Name' starts with 'user'
+    }));
+
+    if (user)
+        std::cout << "User found!"
+                  << "\n  Id = " << *user->Id
+                  << "\n  Name = " << (user->Name ? *user->Name : Text{"UNKNOWN NAME"})
+                  << "\n  Email = " << *user->Email
+                  << "\n  Password = " << *user->Password
+                  << "\n  Age = " << (user->Age ? *user->Age : Smallint(0)) << "\n";
+}
+
+
+void Step7_HowToFindRemoveRecordInTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step7_HowToFindRemoveRecordInTable ===\n";
+    auto user = sql.find<Users>(where({     // find single record in 'Users' table
+        auto name = Field(Users::Name);     // declare fields using Field(...) macro
+        return name.startsWith("user");     // find record which field 'Name' starts with 'user'
+    }));
+
+    if (user)
+    {
+        user.remove();
+        user.commit();
+        sql.push();
+    }
+}
+
+
+void Step8_HowToRemoveTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step8_HowToRemoveTable ===\n";
+    sql.remove<Things>();
+}
+
+
 int main()
 {
     epsql::PostgreSQL sql;
 
-    /**
-     *  Connect to database using connection string
-     */
-    if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
-                     "hostaddr = 127.0.0.1 port = 5432"))
-    {
-        std::cerr << "Cannot connect to the database\n";
-        return 1;
-    }
-
-    /**
-     *  Create table declared with macro CREATE_TABLE
-     *  If table already existed, nothing happens
-     */
-    std::cout << "Create table [Users]\n";
-    if (!sql.create<Users>())
-    {
-        std::cerr << "Failed to create table 'Users'\n";
-        return 2;
-    }
-
-    /**
-     *  Same as above, for different type
-     */
-    std::cout << "Create table [Things]\n";
-    if (!sql.create<Things>())
-    {
-        std::cerr << "Failed to create table 'Things'\n";
-        return 3;
-    }
-
-    std::cout << "\n=== BLOCK 1 ===\n";
-    {
-        /**
-         * To insert new record into table user insert method on database
-         */
-        std::cout << "    Create new Users record\n";
-        auto user = sql.insert<Users>();
-        user->Id = 1;
-        user->Email = "user@user.com";
-        user->Name = "username";
-        user->Password = "userpassword";
-
-        std::cout << "    Create new Things record\n";
-        auto thing = sql.insert<Things>();
-        thing->Id = 1;
-        thing->UserId = user->Id;
-        thing->Name = "Thing!";
-
-        /* Use commit on object if it is ready to submit */
-        std::cout << "    Insert user into [Users] locally\n";
-        user.commit();
-        std::cout << "    Insert thing into [Things] locally\n";
-        thing.commit();
-
-        /* Use push on sql to submit all changes */
-        std::cout << "    Push changes in [Users] and [Things]\n";
-        sql.push();
-
-        /* Or clean to discard all changes */
-        sql.clean();  // nothing clean as all changes submited in step above
-    }
-
-    std::cout << "\n=== BLOCK 2 ===\n";
-    {
-        /**
-         *  To find record in database use one of available 'find' methods
-         *  - method use template to specified search table
-         *  - user where(...) macro to declare search conditions
-         */
-
-        std::cout << "    Find in [Users] record meet conditions\n";
-        auto user = sql.find<Users>(where({     // find single record from 'Users' table
-            /* Declare used table fields using Field(...) macro */
-            auto name = Field(Users::Name);     // we will use 'Name' field from 'Users' table
-            return name.startsWith("user");     // we want to find record which field 'Name' starts
-                                                // with 'user' prefix
-        }));
-
-
-        /**
-         *  Condition check if record exists
-         *  It is equivalent of user.isExists()
-         */
-        if (user)
-        {
-            std::cout << "    User found!\n";
-            /* If we want to remove some records we use remove method on them */
-            std::cout << "    Remove user\n";
-            user.remove();
-            /* Commit removed object */
-            std::cout << "    Commit changes\n";
-            user.commit();
-
-            /* And always submit changes using 'push' if everythings commited */
-            std::cout << "    Push changes with removed User\n";
-            sql.push();
-        }
-    }
+    Step1_HowToConnectDatabase(sql);
+    Step2_HowToCreateDefinedTables(sql);
+    Step3_HowToCreateNewRecordInTable(sql);
+    Step4_HowToUpdateRecordInTable(sql);
+    Step5_HowToRemoveRecordInTable(sql);
+    Step6_HowToFindRecordInTable(sql);
+    Step7_HowToFindRemoveRecordInTable(sql);
+    Step8_HowToRemoveTable(sql);
 
     return 0;
 }

@@ -3,134 +3,143 @@
  */
 #pragma once
 
-#include <iostream>
 #include <memory>
 #include <vector>
 
 #include "query/queries.hpp"
-#include "utils/typeof.hpp"
+#include "query/translator/createrecord.hpp"
+#include "query/translator/removerecord.hpp"
+#include "query/translator/updaterecord.hpp"
+#include "dbresult.hpp"
 
 
 namespace epsql::db
 {
 
-class Database : public std::enable_shared_from_this<Database>
+class IDatabaseConnection
+{
+public:
+    virtual ~IDatabaseConnection() = default;
+
+    virtual bool connect(std::string connectionString) = 0;
+    virtual bool disconnect() = 0;
+    virtual bool isConnected() = 0;
+};
+
+
+class IDatabaseTransaction
+{
+public:
+    virtual ~IDatabaseTransaction() = default;
+
+    virtual bool clean() = 0;
+    virtual bool push() = 0;
+    virtual DbResult query(std::string sqlQuery) = 0;
+
+protected:
+    std::string m_commits;
+};
+
+
+class DatabaseTransaction : public IDatabaseTransaction
+{
+public:
+    template <typename Table>
+    inline bool isExists() { return query(query::IsExistsTableQuery<Table>{}.to_string()).isResultTrue(); }
+
+    template <typename Table>
+    inline bool create() { return query(query::CreateTableQuery<Table>{}.to_string()).isSuccess(); }
+
+    template <typename Table>
+    inline bool remove() { return query(query::RemoveTableQuery<Table>{}.to_string()).isSuccess(); }
+
+    template <typename Table>
+    inline std::size_t size() { return query(query::SizeTableQuery<Table>{}.to_string()).template get<std::size_t>(); }
+
+    template <typename RecordCreate>
+    inline bool create(RecordCreate record)
+    {
+        if (!m_commits.empty())
+            m_commits += ";\n";
+        m_commits += query::translator::CreateRecordQuery{std::move(record)}.to_string();
+        return true;
+    }
+
+    template <typename RecordUpdate>
+    inline bool update(RecordUpdate record)
+    {
+        if (!m_commits.empty())
+            m_commits += ";\n";
+        m_commits += query::translator::UpdateRecordQuery(std::move(record)).to_string();
+        return true;
+    }
+
+    template <typename RecordDelete>
+    inline bool remove(RecordDelete record)
+    {
+        if (!m_commits.empty())
+            m_commits += ";\n";
+        m_commits += query::translator::RemoveRecordQuery(std::move(record)).to_string();
+        return true;
+    }
+};
+
+
+
+template <typename SQL>
+class Database : public IDatabaseConnection,
+                 public DatabaseTransaction,
+                 public std::enable_shared_from_this<Database<SQL>>
 {
 private:
     explicit Database() = default;
 
 public:
-    bool connect(std::string connectionString)
-    {
-        std::cerr << "[DATABASE] Connect \"" << connectionString << "\"\n";
-        return true;
-    }
+    inline bool connect(std::string connectionString) override { return m_sql.connect(std::move(connectionString)); }
+    inline bool disconnect() override { return m_sql.disconnect(); }
+    inline bool isConnected() override { return m_sql.isConnected(); }
 
-    bool disconnect()
+    inline DbResult query(std::string sqlQuery) override { return m_sql.query(std::move(sqlQuery)); }
+    inline bool clean() override { m_commits.clear(); return true; }
+    inline bool push() override
     {
-        std::cerr << "[DATABASE] Disconnect\n";
-        return true;
-    }
-
-    bool isConnected()
-    {
-        std::cerr << "[DATABASE] Is connected\n";
-        return true;
-    }
-
-    bool push()
-    {
-        std::cerr << "[DATABASE] Push\n";
-        return true;
-    }
-
-    bool clean()
-    {
-        std::cerr << "[DATABASE] Clean all stored commits\n";
-        return true;
-    }
-
-    void query(std::string sqlQuery)
-    {
-        std::cerr << "[DATABASE] SQL query to database '" << sqlQuery << "'\n";
+        auto queryPayload = std::string{};
+        std::swap(queryPayload, m_commits);
+        return query(queryPayload).isSuccess();
     }
 
     template <typename Table>
-    bool isExists()
+    inline std::vector<Table> findFirst(std::string queryPayload, std::size_t limit)
     {
-        std::cerr << "[DATABASE] Is table \"" << utils::TypeOf<Table>().type() << "\" exists\n";
-        return true;
+        if (!queryPayload.empty())
+            queryPayload += " LIMIT " + std::to_string(limit);
+        return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 
     template <typename Table>
-    bool create()
+    inline std::vector<Table> findLast(std::string queryPayload, std::size_t limit)
     {
-        std::cout << query::CreateTableQuery<Table>{}.to_string() << "\n";
-        return true;
+        if (!queryPayload.empty())
+            queryPayload += " ORDER BY \"Id\" DESC LIMIT " + std::to_string(limit);
+        return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 
     template <typename Table>
-    bool remove()
+    inline std::vector<Table> findAll(std::string queryPayload)
     {
-        std::cerr << "Remove table {" << utils::TypeOf<Table>().type() << "}\n";
-        return true;
-    }
-
-    template <typename Table>
-    std::size_t size()
-    {
-        std::cerr << "Size of table\n";
-        return 0ull;
-    }
-
-    template <typename Record>
-    bool create(Record record)
-    {
-        std::cerr << "Create record for table\n";
-        return true;
-    }
-
-    template <typename Record>
-    bool update(Record record)
-    {
-        std::cerr << "Update record for table\n";
-        return true;
-    }
-
-    bool remove(uint64_t recordId, uint64_t tableId)
-    {
-        std::cerr << "Remove record {" << recordId << "} for table {" << tableId << "}\n";
-        return true;
-    }
-
-    template <typename Table>
-    std::vector<Table> findFirst(std::string query, std::size_t limit)
-    {
-        std::cerr << "Looking for [" << limit << "] objects '" << query << "'\n";
-        return {};
-    }
-
-    template <typename Table>
-    std::vector<Table> findLast(std::string query, std::size_t limit)
-    {
-        std::cerr << "Looking for last [" << limit << "] objects '" << query << "'\n";
-        return {};
-    }
-
-    template <typename Table>
-    std::vector<Table> findAll(std::string query)
-    {
-        std::cerr << "Looking for all '" << query << "'\n";
-        return {};
+        return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 
 
 public:
-    inline static std::shared_ptr<Database> create()
+    inline static std::shared_ptr<Database<SQL>> createInstance()
     {
-        auto database = Database{};
-        return std::make_shared<Database>(std::move(database));
+        auto database = Database<SQL>{};
+        return std::make_shared<Database<SQL>>(std::move(database));
     }
+
+private:
+    SQL m_sql;
 };
 
 }  // namespace epsql::db

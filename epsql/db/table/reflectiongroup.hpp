@@ -7,9 +7,11 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include "db/value/ivalue.hpp"
+#include "types.hpp"
 #include "utils/hash.hpp"
 
 
@@ -20,6 +22,13 @@ class ReflectionRegister
 {
 public:
     virtual ~ReflectionRegister() = default;
+
+    inline static std::optional<std::string> tableName(uint64_t uuid)
+    {
+        if (m_tableReferenceUuids.find(uuid) != m_tableReferenceUuids.end())
+            return m_tableReferenceUuids[uuid];
+        return std::nullopt;
+    }
 
     inline static std::optional<uint32_t> reference(const std::string& fieldFullName)
     {
@@ -36,10 +45,12 @@ public:
     }
 
 protected:
-    template <typename... FieldNames>
-    inline static void assignAll(FieldNames&&... fieldFullNames)
+    template <typename ClassUuid, typename ClassName, typename... FieldNames>
+    inline static void assignAll(ClassUuid uuid, ClassName className,
+                                 FieldNames&&... fieldFullNames)
     {
         (assign(fieldFullNames), ...);
+        m_tableReferenceUuids[uuid] = className;
     }
 
     inline static void assign(const char* fieldFullName)
@@ -72,6 +83,8 @@ protected:
 private:
     inline static std::unordered_map<std::string, uint32_t> m_referenceHashes = {};
     inline static std::unordered_map<uint32_t, std::string> m_referenceUuids = {};
+
+    inline static std::unordered_map<uint64_t, std::string> m_tableReferenceUuids = {};
 };
 
 
@@ -79,19 +92,19 @@ template <typename T>
 class ReflectionGroup : public ReflectionRegister
 {
 public:
-    inline const char* typeOf(const char* name)
+    inline uint64_t typeOf(const char* name) const
     {
         auto it = std::find_if(m_names.begin(), m_names.end(),
                                [&name](const auto* n) { return strcmp(name, n) == 0; });
         if (it == m_names.end())
-           return "";
+            return 0ull;
 
         const auto itPos = it - m_names.begin();
         return m_types[itPos];
     }
 
     template <typename U>
-    inline U* get(const char* name)
+    inline U* ptr(const char* name)
     {
         auto it = std::find_if(m_names.begin(), m_names.end(),
                                [&name](const auto* n) { return strcmp(name, n) == 0; });
@@ -99,7 +112,97 @@ public:
             return nullptr;
 
         const auto itPos = it - m_names.begin();
-        return reinterpret_cast<value::ValueT<U>*>(m_position[itPos])->nonEmptyPtr();
+        return reinterpret_cast<value::ValueT<U>*>(m_position[itPos])->ptr();
+    }
+
+    template <typename U>
+    inline const U* ptr(const char* name) const
+    {
+        auto it = std::find_if(m_names.begin(), m_names.end(),
+                               [&name](const auto* n) { return strcmp(name, n) == 0; });
+        if (it == m_names.end())
+            return nullptr;
+
+        const auto itPos = it - m_names.begin();
+        return reinterpret_cast<value::ValueT<U>*>(m_position[itPos])->ptr();
+    }
+
+    template <typename U>
+    inline U& get(const char* name)
+    {
+        auto it = std::find_if(m_names.begin(), m_names.end(),
+                               [&name](const auto* n) { return strcmp(name, n) == 0; });
+        if (it == m_names.end())
+        {
+            auto result = std::string{"There is no field named '"};
+            result += name;
+            result += "' in table '";
+            result += *tableName(utils::TypeOf<T>().type());
+            result += "'";
+            throw std::runtime_error{result};
+        }
+
+        const auto itPos = it - m_names.begin();
+        return *(reinterpret_cast<value::ValueT<U>*>(m_position[itPos])->nonEmptyPtr());
+    }
+
+    inline std::string getValueAsString(const char* name) const
+    {
+        auto result = std::string{};
+        const auto value = var(name);
+        const auto valueGetter = [&result](auto&& value) { result = table::getValue(value); };
+        std::visit(valueGetter, value);
+        return result;
+    }
+
+    inline std::variant<Text, Smallint, Int, Bigint, Float8, Real, Boolean, void*> var(
+            const char* name) const
+    {
+        const auto type = typeOf(name);
+
+        if (type == 0ull)
+            return nullptr;
+        else if (type == utils::TypeOf<Text>().type())
+        {
+            if (const auto* result = ptr<Text>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Smallint>().type())
+        {
+            if (const auto* result = ptr<Smallint>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Int>().type())
+        {
+            if (const auto* result = ptr<Int>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Bigint>().type())
+        {
+            if (const auto* result = ptr<Bigint>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Float8>().type())
+        {
+            if (const auto* result = ptr<Float8>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Double>().type())
+        {
+            if (const auto* result = ptr<Double>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Real>().type())
+        {
+            if (const auto* result = ptr<Real>(name))
+                return *result;
+        }
+        else if (type == utils::TypeOf<Boolean>().type())
+        {
+            if (const auto* result = ptr<Boolean>(name))
+                return *result;
+        }
+        return nullptr;
     }
 
     template <typename U>
@@ -120,9 +223,9 @@ public:
         }
     }
 
+protected:
     inline static const auto& memberNames() { return m_names; }
 
-protected:
     template <typename... Field>
     ReflectionGroup(Field&&... field)
         : m_position{((void*)&field)...}
@@ -151,7 +254,7 @@ private:
     std::vector<std::size_t> m_type = {};
 
     static inline std::vector<const char*> m_names = {};
-    static inline std::vector<const char*> m_types = {};
+    static inline std::vector<uint64_t> m_types = {};
 };
 
 }  // namespace epsql::db::table

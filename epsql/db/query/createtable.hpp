@@ -38,10 +38,10 @@ public:
 private:
     inline void appendFields(const Table& table, std::stringstream& stream) const
     {
-        stream << " (\n  " << table.fieldFullNames()[0];
+        stream << " (\n    " << table.fieldFullNames()[0];
         for (auto i = 1u; i < table.fieldFullNames().size(); ++i)
         {
-            stream << ",\n  " << table.fieldFullNames()[i];
+            stream << ",\n    " << table.fieldFullNames()[i];
         }
     }
 
@@ -51,7 +51,7 @@ private:
         if (strlen(table.primaryKeyName()) > 0 &&
             std::any_of(table.fieldNames().cbegin(), table.fieldNames().cend(), findKeyInTable))
         {
-            stream << ",\n    PRIMARY KEY (" << table.primaryKeyName() << ")";
+            stream << ",\n  PRIMARY KEY (" << table.primaryKeyName() << ")";
         }
     }
 
@@ -66,9 +66,9 @@ private:
                 strlen(foreignKey.referenceField) == 0)
                 continue;
 
-            stream << ",\n    CONSTRAINT fk_" << foreignKey.field
-                   << "\n      FOREIGN KEY(" << foreignKey.field << ")"
-                   << "\n      REFERENCES " << foreignKey.referenceTable
+            stream << ",\n  CONSTRAINT fk_" << foreignKey.field
+                   << "\n    FOREIGN KEY(" << foreignKey.field << ")"
+                   << "\n    REFERENCES " << foreignKey.referenceTable
                    << '(' << foreignKey.referenceField << ") ON DELETE CASCADE";
         }
     }
