@@ -26,8 +26,11 @@ public:
     template <typename T, typename... Args>
     inline OperationResult operation(Args&&... args)
     {
-        auto operation = semantic::makeOperation<T>(std::forward<Args>(args)...);
-        return std::make_shared<semantic::OperationDataResult>(m_tree, std::move(operation));
+        using namespace semantic;
+        auto operation = makeOperation<T>(std::forward<Args>(args)...);
+        auto result = std::make_shared<OperationDataResult>(m_tree, std::move(operation));
+        m_tree.pushLeaf(result->shared_from_this());
+        return result;
     }
 
 private:

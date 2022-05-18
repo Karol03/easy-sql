@@ -313,8 +313,8 @@
 #define GET_FOREIGN_KEYS_(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40, n, ...) \
     GET_FOREIGN_KEY##n(_v1,_v2,_v3,_v4,_v5,_v6,_v7,_v8,_v9,_v10,_v11,_v12,_v13,_v14,_v15,_v16,_v17,_v18,_v19,_v20,_v21,_v22,_v23,_v24,_v25,_v26,_v27,_v28,_v29,_v30,_v31,_v32,_v33,_v34,_v35,_v36,_v37,_v38,_v39,_v40)
 
-#define GET_FOREIGN_KEYS(_v1, _v2, ...) \
-    GET_FOREIGN_KEYS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0)
+#define GET_FOREIGN_KEYS(...) \
+    GET_FOREIGN_KEYS_(__VA_ARGS__, 20, 0, 19, 0, 18, 0, 17, 0, 16, 0, 15, 0, 14, 0, 13, 0, 12, 0, 11, 0, 10, 0, 9, 0, 8, 0, 7, 0, 6, 0, 5, 0, 4, 0, 3, 0, 2, 0, 1, 0, 0)
 
 
 #define NULLABLE(__SqlType) \
@@ -382,11 +382,11 @@
  *               Id,       NOT_NULL(Int),
  *               Email,    NOT_NULL(Text),
  *               Name,     NULLABLE(Text),
- *               Password, DEFAULT(Text, "Password", NotNull));
+ *               Password, NOT_NULL(Text);
  *
  *  CREATE_TABLE(Thing,
  *               Id,       NOT_NULL(Int),,
- *               Name,     DEFAULT(Text, "Noname")),
+ *               Name,     NOT_NULL(Text),
  *               UserId,   FOREIGN_KEY(Users::Id, NotNull));
  *
  */
@@ -409,8 +409,8 @@
                 assignAll(::epsql::utils::TypeOf<__TableName>().type(), \
                           #__TableName, \
                           GET_FIELD_NAMES(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
-                for (const auto& fk : foreignKeys()) \
-                    insertForeignKey(fk.field, fk.referenceTable, fk.referenceField); \
+                for (const auto& foreignKey : foreignKeys()) \
+                    insertForeignKey(foreignKey.field, foreignKey.referenceTable, foreignKey.referenceField); \
                 isReferenced = true; \
             } \
         } \

@@ -48,6 +48,7 @@ template <> inline const char* nameOf<Float8>() { return "Double precision"; }
 template <> inline const char* nameOf<Real>() { return "Real"; }
 
 
+inline std::string getValue(const char* value) { return std::string{"'"} + value + "'"; }
 template <typename T> inline std::string getValue(const T&) { return "NULL"; }
 template <> inline std::string getValue(const Smallint& value) { return std::to_string(value); }
 template <> inline std::string getValue(const Int& value) { return std::to_string(value); }

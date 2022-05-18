@@ -75,7 +75,7 @@ struct ForeignKey : public NullType
 private:
     inline static std::string cutTableName()
     {
-        const auto fullName = db::table::ReflectionRegister::reference(referenceId);
+        const auto fullName = db::table::ReflectionRegister::reference(std::abs(Reference));
         if (!fullName)
             return {};
 
@@ -88,7 +88,7 @@ private:
 
     inline static std::string cutFieldName()
     {
-        const auto fullName = db::table::ReflectionRegister::reference(referenceId);
+        const auto fullName = db::table::ReflectionRegister::reference(std::abs(Reference));
         if (!fullName)
             return {};
 
@@ -98,9 +98,6 @@ private:
 
         return fullName->substr(it + 2);
     }
-
-private:
-    inline static uint32_t referenceId = std::abs(Reference);
 };
 
 

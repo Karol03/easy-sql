@@ -112,7 +112,13 @@ public:
     inline std::vector<Table> findFirst(std::string queryPayload, std::size_t limit)
     {
         if (!queryPayload.empty())
+        {
+            queryPayload += "\nORDER BY ";
+            queryPayload += Table::name();
+            queryPayload += ".";
+            queryPayload += Table::primaryKeyName();
             queryPayload += " LIMIT " + std::to_string(limit);
+        }
         return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 
@@ -120,7 +126,13 @@ public:
     inline std::vector<Table> findLast(std::string queryPayload, std::size_t limit)
     {
         if (!queryPayload.empty())
+        {
+            queryPayload += "\nORDER BY ";
+            queryPayload += Table::name();
+            queryPayload += ".";
+            queryPayload += Table::primaryKeyName();
             queryPayload += " DESC LIMIT " + std::to_string(limit);
+        }
         return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 

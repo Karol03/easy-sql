@@ -5,6 +5,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 
 #include "operationresultbase.hpp"
 
@@ -31,6 +33,32 @@ public:
         push(std::move(branch));
     }
 
+    const OperationResultBase& main() const
+    {
+        return **m_branches.begin();
+    }
+
+    void walk(std::function<void(const OperationResultBase&)> walkFunction) const
+    {
+        if (!m_branches.empty())
+        {
+            (*m_branches.begin())->walk(walkFunction);
+        }
+    }
+
+    void validate()
+    {
+        constexpr auto SINGLE_OPERATION_ROOT = 1ul;
+
+        if (m_branches.size() != SINGLE_OPERATION_ROOT)
+        {
+            auto result = std::stringstream{};
+            result << "Missing '&&' or '||' operator. Probably " \
+                      "some Field(...) operator was used incorrectly or is abandoned.";
+            throw std::runtime_error{result.str()};
+        }
+    }
+
 private:
     void push(std::shared_ptr<OperationResultBase> branch)
     {
@@ -44,7 +72,6 @@ private:
         if (it != m_branches.end())
             m_branches.erase(it);
     }
-
 
 private:
     std::vector<std::shared_ptr<OperationResultBase>> m_branches;

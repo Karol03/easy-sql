@@ -46,7 +46,7 @@ CREATE_TABLE(Things,
 
 void Step1_HowToConnectDatabase(epsql::PostgreSQL& sql)
 {
-    std::cout << "\t=== Step1_HowToConnectDatabase ===\n";
+    std::cout << "\t\t\t=== Step1_HowToConnectDatabase ===\n";
     if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
                      "hostaddr = 127.0.0.1 port = 5432"))
     {
@@ -57,7 +57,7 @@ void Step1_HowToConnectDatabase(epsql::PostgreSQL& sql)
 
 void Step2_HowToCreateDefinedTables(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step2_HowToCreateDefinedTables ===\n";
+    std::cout << "\n\t\t\t=== Step2_HowToCreateDefinedTables ===\n";
     if (!sql.create<Users>())
         throw std::runtime_error{"Failed to create table 'Users'\n"};
     if (!sql.create<Things>())
@@ -68,7 +68,7 @@ void Step2_HowToCreateDefinedTables(epsql::PostgreSQL& sql)
 
 void Step3_HowToCreateNewRecordInTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step3_HowToCreateNewRecordInTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step3_HowToCreateNewRecordInTable ===\n";
     auto user = sql.insert<Users>();
     user->Id = 1;
     user->Email = "user@user.com";
@@ -89,7 +89,7 @@ void Step3_HowToCreateNewRecordInTable(epsql::PostgreSQL& sql)
 
 void Step4_HowToUpdateRecordInTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step4_HowToUpdateRecordInTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step4_HowToUpdateRecordInTable ===\n";
     auto user = sql.insert<Users>();
     user->Id = 2;
     user->Email = "user@user.com";
@@ -114,7 +114,7 @@ void Step4_HowToUpdateRecordInTable(epsql::PostgreSQL& sql)
 
 void Step5_HowToRemoveRecordInTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step5_HowToRemoveRecordInTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step5_HowToRemoveRecordInTable ===\n";
     auto user = sql.insert<Users>();
     user->Id = 3;
     user->Email = "user3@user.com";
@@ -132,7 +132,7 @@ void Step5_HowToRemoveRecordInTable(epsql::PostgreSQL& sql)
 
 void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step6_HowToFindRecordInTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step6_HowToFindRecordInTable ===\n";
     auto user = sql.find<Users>(where({     // find single record in 'Users' table
         auto userId = Field(Things::UserId);  // declare fields using Field(...) macro
         auto thingName = Field(Things::Name);
@@ -151,9 +151,9 @@ void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step7_HowToFindRemoveRecordInTable(epsql::PostgreSQL& sql)
+void Step7_HowToFindAndRemoveRecordInTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step7_HowToFindRemoveRecordInTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step7_HowToFindAndRemoveRecordInTable ===\n";
     auto user = sql.find<Users>(where({     // find single record in 'Users' table
         auto name = Field(Users::Name);     // declare fields using Field(...) macro
         return name.startsWith("user");     // find record which field 'Name' starts with 'user'
@@ -168,9 +168,9 @@ void Step7_HowToFindRemoveRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step8_HowToFindRecordUsingForeignKeyProperty(epsql::PostgreSQL& sql)
+void Step8_HowToFindRecordUsingImplicitForeignKeyProperty(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step8_HowToFindRecordUsingForeignKeyProperty ===\n";
+    std::cout << "\n\n\t\t\t=== Step8_HowToFindRecordUsingImplicitForeignKeyProperty ===\n";
     auto user = sql.find<Users>(where({         // find single record in 'Users' table
         auto thingName = Field(Things::Name);   // declare fields using Field(...) macro
         return thingName == "Thing!";           // cause Things table has defined foreign key related
@@ -190,14 +190,15 @@ void Step8_HowToFindRecordUsingForeignKeyProperty(epsql::PostgreSQL& sql)
 
 void Step9_HowToRemoveTable(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step9_HowToRemoveTable ===\n";
+    std::cout << "\n\n\t\t\t=== Step8_HowToFindRecordUsingImplicitForeignKeyProperty ===\n";
     sql.remove<Things>();
 }
 
 
 int main()
 {
-    epsql::PostgreSQL sql;
+    auto str = std::make_shared<std::stringstream>();
+    epsql::PostgreSQL sql(str);
 
     Step1_HowToConnectDatabase(sql);
     Step2_HowToCreateDefinedTables(sql);
@@ -205,8 +206,11 @@ int main()
     Step4_HowToUpdateRecordInTable(sql);
     Step5_HowToRemoveRecordInTable(sql);
     Step6_HowToFindRecordInTable(sql);
-    Step7_HowToFindRemoveRecordInTable(sql);
+    Step7_HowToFindAndRemoveRecordInTable(sql);
+    Step8_HowToFindRecordUsingImplicitForeignKeyProperty(sql);
     Step9_HowToRemoveTable(sql);
+
+    std::cerr << "Error stream : {\n" << str->str() << "\n}\n";
 
     return 0;
 }

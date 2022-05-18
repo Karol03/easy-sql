@@ -22,8 +22,11 @@ public:
                                  std::shared_ptr<Operation> operation)
         : m_tree{tree}
         , m_operation{std::move(operation)}
+    {}
+
+    inline EOperationResultType type() const override
     {
-        m_tree.pushLeaf(shared_from_this());
+        return EOperationResultType::Data;
     }
 
     inline std::string parse() const override
@@ -39,6 +42,11 @@ public:
     inline uint32_t getDepth() const override
     {
         return 0;
+    }
+
+    inline void walk(const std::function<void(const OperationResultBase&)>& walkFunction) const override
+    {
+        walkFunction(*this);
     }
 
 private:
@@ -61,8 +69,11 @@ public:
         , m_depth{depth}
         , m_lhs{std::move(lhs)}
         , m_rhs{std::move(rhs)}
+    {}
+
+    inline EOperationResultType type() const override
     {
-        m_tree.pushBranch(shared_from_this(), m_lhs, m_rhs);
+        return EOperationResultType::And;
     }
 
     inline std::string parse() const override
@@ -87,6 +98,13 @@ public:
         return m_depth;
     }
 
+    inline void walk(const std::function<void(const OperationResultBase&)>& walkFunction) const override
+    {
+        walkFunction(*this);
+        m_lhs->walk(walkFunction);
+        m_rhs->walk(walkFunction);
+    }
+
 private:
     inline OperationTree& tree() override { return m_tree; }
 
@@ -109,8 +127,11 @@ public:
         , m_depth{depth}
         , m_lhs{std::move(lhs)}
         , m_rhs{std::move(rhs)}
+    {}
+
+    inline EOperationResultType type() const override
     {
-        m_tree.pushBranch(shared_from_this(), m_lhs, m_rhs);
+        return EOperationResultType::Or;
     }
 
     inline std::string parse() const override
@@ -135,6 +156,13 @@ public:
         return m_depth;
     }
 
+    inline void walk(const std::function<void(const OperationResultBase&)>& walkFunction) const override
+    {
+        walkFunction(*this);
+        m_lhs->walk(walkFunction);
+        m_rhs->walk(walkFunction);
+    }
+
 private:
     inline OperationTree& tree() override { return m_tree; }
 
@@ -155,7 +183,9 @@ inline std::shared_ptr<OperationResultBase> operator&&(const std::shared_ptr<Ope
         throw std::runtime_error{"Missing right side operation for 'AND' comparation!"};
 
     const auto depth = std::max(lhs->getDepth(), rhs->getDepth()) + 1;
-    return std::make_shared<OperationAndResult>(lhs->tree(), depth, lhs, rhs);
+    auto result = std::make_shared<OperationAndResult>(lhs->tree(), depth, lhs, rhs);
+    lhs->tree().pushBranch(result->shared_from_this(), lhs, rhs);
+    return result;
 }
 
 inline std::shared_ptr<OperationResultBase> operator||(const std::shared_ptr<OperationResultBase>& lhs,
@@ -167,13 +197,9 @@ inline std::shared_ptr<OperationResultBase> operator||(const std::shared_ptr<Ope
         throw std::runtime_error{"Missing right side operation for 'OR' comparation!"};
 
     const auto depth = std::max(lhs->getDepth(), rhs->getDepth()) + 1;
-    return std::make_shared<OperationOrResult>(lhs->tree(), depth, lhs, rhs);
-}
-
-template <typename T, typename... Args>
-inline auto makeOperationResult(Args&&... args)
-{
-    return std::make_shared<T>(std::forward<Args>(args)...);
+    auto result = std::make_shared<OperationOrResult>(lhs->tree(), depth, lhs, rhs);
+    lhs->tree().pushBranch(result->shared_from_this(), lhs, rhs);
+    return result;
 }
 
 }  // namespace epsql::db::lambda::semantic
