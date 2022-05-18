@@ -15,7 +15,7 @@ class RemoveTableQuery : public Query
 public:
     std::string to_string() const override
     {
-        return std::string{"DROP TABLE IF EXISTS "} + Table().name() + " CASCADE";
+        return std::string{"DROP TABLE IF EXISTS "} + Table::name() + " CASCADE";
     }
 };
 

@@ -4,10 +4,12 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
 #include <optional>
+#include <queue>
 #include <stdexcept>
 #include <unordered_map>
-#include <variant>
+#include <unordered_set>
 #include <vector>
 
 #include "db/value/ivalue.hpp"
@@ -88,8 +90,261 @@ private:
 };
 
 
+class ForeignKeyReflectionGroup
+{
+public:
+    using FieldHintsType = std::unordered_map<std::string, std::unordered_set<std::string>>;
+
+protected:
+    struct Tree
+    {
+    private:
+        using FieldHintsType = std::unordered_map<std::string, std::unordered_set<std::string>>;
+        using RelatedFields = std::unordered_set<std::string>;
+        using ConnectedTable = std::unordered_map<std::string, RelatedFields>;
+        using TableRelations = std::unordered_map<std::string, ConnectedTable>;
+
+    public:
+        inline void insert(std::string tableName,
+                           std::string fieldName,
+                           std::string referenceTable,
+                           std::string referenceField)
+        {
+            m_relations[tableName][referenceTable].insert(fieldName + '.' + referenceField);
+            m_relations[referenceTable][tableName].insert(referenceField + '.' + fieldName);
+        }
+
+        std::vector<std::pair<std::string, std::string>> pathWithoutHints(
+                std::string beginTableName,
+                std::string endTableName)
+        {
+            validateBranchesExist(beginTableName, endTableName);
+
+            auto path = std::unordered_map<std::string, std::string>{};
+            auto visited = std::unordered_set<std::string>{};
+            auto toVisit = std::queue<std::string>{};
+            toVisit.push(std::move(beginTableName));
+
+            while (!toVisit.empty())
+            {
+                auto tableName = toVisit.front();
+                toVisit.pop();
+
+                if (!visited.insert(tableName).second)
+                    continue;
+
+                if (m_relations[tableName].find(endTableName) != m_relations[tableName].end())
+                {
+                    path[endTableName] = tableName;
+                    return composeResult(std::move(path), std::move(endTableName));
+                }
+                else
+                {
+                    for (const auto& relation : m_relations[tableName])
+                    {
+                        path[relation.first] = tableName;
+                        toVisit.push(relation.first);
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        std::vector<std::pair<std::string, std::string>> pathWithHints(
+                std::string beginTableName,
+                std::string endTableName,
+                std::vector<std::string> tableHints,
+                FieldHintsType fieldHints)
+        {
+            validateBranchesExist(beginTableName, endTableName);
+
+            auto path = std::unordered_map<std::string, std::string>{};
+            auto visited = std::unordered_set<std::string>{};
+            auto container = std::deque(std::make_move_iterator(tableHints.begin()),
+                                        std::make_move_iterator(tableHints.end()));
+            container.push_front(std::move(beginTableName));
+            auto toVisit = std::queue(std::move(container));
+
+            while (!toVisit.empty())
+            {
+                auto tableName = toVisit.front();
+                toVisit.pop();
+
+                if (!visited.insert(tableName).second)
+                    continue;
+
+                if (m_relations[tableName].find(endTableName) != m_relations[tableName].end())
+                {
+                    path[endTableName] = tableName;
+                    if (fieldHints.empty())
+                        return composeResult(std::move(path), std::move(endTableName));
+                    else
+                        return composeResultWithHint(std::move(path),
+                                                     std::move(endTableName),
+                                                     std::move(fieldHints));
+                }
+                else
+                {
+                    for (const auto& relation : m_relations[tableName])
+                    {
+                        path[relation.first] = tableName;
+                        toVisit.push(relation.first);
+                    }
+                }
+            }
+
+            return {};
+        }
+
+    private:
+        std::vector<std::pair<std::string, std::string>> composeResult(
+                std::unordered_map<std::string, std::string> path,
+                std::string endTableName)
+        {
+            auto result = std::vector<std::pair<std::string, std::string>>{};
+
+            for (auto tableName = path[endTableName];
+                 !tableName.empty();
+                 endTableName = tableName, tableName = path[endTableName])
+            {
+                auto relatedFields = *m_relations[tableName][endTableName].begin();
+                auto firstRelatedField = relatedFields.substr(0, relatedFields.find('.'));
+                auto secondRelatedField = relatedFields.substr(relatedFields.find('.') + 1);
+
+                auto firstTableFieldName = tableName + '.' + firstRelatedField;
+                auto secondTableFieldName = endTableName + '.' + secondRelatedField;
+
+                result.push_back({std::move(firstTableFieldName),
+                                  std::move(secondTableFieldName)});
+            }
+
+            return std::vector(result.rbegin(), result.rend());
+        }
+
+        std::vector<std::pair<std::string, std::string>> composeResultWithHint(
+                std::unordered_map<std::string, std::string> path,
+                std::string endTableName,
+                FieldHintsType fieldHints)
+        {
+            auto result = std::vector<std::pair<std::string, std::string>>{};
+
+            for (auto tableName = path[endTableName];
+                 !tableName.empty();
+                 endTableName = tableName, tableName = path[endTableName])
+            {
+                auto relatedFieldsPair = relationFor(tableName, endTableName, fieldHints);
+
+                if (relatedFieldsPair.empty())
+                    relatedFieldsPair = relationFor(endTableName, tableName, fieldHints);
+
+                if (relatedFieldsPair.empty())
+                    relatedFieldsPair = *m_relations[tableName][endTableName].begin();
+
+                auto firstRelatedField = relatedFieldsPair.substr(0, relatedFieldsPair.find('.'));
+                auto secondRelatedField = relatedFieldsPair.substr(relatedFieldsPair.find('.') + 1);
+
+                auto firstTableFieldName = tableName + '.' + firstRelatedField;
+                auto secondTableFieldName = endTableName + '.' + secondRelatedField;
+
+                result.push_back({std::move(firstTableFieldName),
+                                  std::move(secondTableFieldName)});
+            }
+
+            return std::vector(result.rbegin(), result.rend());
+        }
+
+        std::string relationFor(
+                const std::string& tableName,
+                const std::string& endTableName,
+                const FieldHintsType& fieldHints)
+        {
+            const auto it = fieldHints.find(tableName);
+            if (it == fieldHints.end())
+                return {};
+
+            for (const auto& relatedFields : m_relations[tableName][endTableName])
+            {
+                for (const auto& hintField : it->second)
+                {
+                    if (relatedFields.substr(0, relatedFields.find('.')) == hintField)
+                    {
+                        return relatedFields;
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        void validateBranchesExist(const std::string& beginName, const std::string& endName) const
+        {
+            if (m_relations.find(beginName) == m_relations.end())
+            {
+                auto result = std::stringstream{};
+                result << "No foreign key tied \"" << beginName
+                       << "\" with any other tables";
+                throw std::runtime_error{result.str()};
+            }
+
+            if (m_relations.find(endName) == m_relations.end())
+            {
+                auto result = std::stringstream{};
+                result << "No foreign key tied \"" << endName
+                       << "\" with any other tables";
+                throw std::runtime_error{result.str()};
+            }
+        }
+
+    private:
+        TableRelations m_relations;
+    };
+
+public:
+    virtual ~ForeignKeyReflectionGroup() = default;
+
+    static inline std::vector<std::pair<std::string, std::string>> findTablesRelationPath(
+            std::string beginTableName,
+            std::string endTableName,
+            std::vector<std::string> tableHints = {},
+            FieldHintsType fieldHints = {})
+    {
+        if (beginTableName == endTableName)
+            return {};
+        else if (tableHints.empty() && fieldHints.empty())
+            return m_tree.pathWithoutHints(std::move(beginTableName),
+                                           std::move(endTableName));
+        else
+            return m_tree.pathWithHints(std::move(beginTableName),
+                                        std::move(endTableName),
+                                        std::move(tableHints),
+                                        std::move(fieldHints));
+    }
+
+protected:
+    inline static Tree m_tree = {};
+};
+
+
 template <typename T>
-class ReflectionGroup : public ReflectionRegister
+class ForeignKeyReflectionGroupT : public ForeignKeyReflectionGroup
+{
+protected:
+    static inline void insertForeignKey(std::string fieldName,
+                                        std::string referenceTable,
+                                        std::string referenceField)
+    {
+        if (!fieldName.empty() && !referenceTable.empty() && !referenceField.empty())
+            m_tree.insert(T::name(),
+                          std::move(fieldName),
+                          std::move(referenceTable),
+                          std::move(referenceField));
+    }
+};
+
+
+template <typename T>
+class ReflectionGroup : public ReflectionRegister, public ForeignKeyReflectionGroupT<T>
 {
 public:
     static inline uint64_t typeOf(const char* name)
@@ -155,53 +410,34 @@ public:
         return result;
     }
 
-    inline std::variant<Text, Smallint, Int, Bigint, Float8, Real, Boolean, void*> var(
-            const char* name) const
+    inline TableVariant var(const char* name) const
     {
         const auto type = typeOf(name);
 
         if (type == 0ull)
             return nullptr;
-        else if (type == utils::TypeOf<Text>().type())
-        {
-            if (const auto* result = ptr<Text>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Smallint>().type())
-        {
-            if (const auto* result = ptr<Smallint>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Int>().type())
-        {
-            if (const auto* result = ptr<Int>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Bigint>().type())
-        {
-            if (const auto* result = ptr<Bigint>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Float8>().type())
-        {
-            if (const auto* result = ptr<Float8>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Double>().type())
-        {
-            if (const auto* result = ptr<Double>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Real>().type())
-        {
-            if (const auto* result = ptr<Real>(name))
-                return *result;
-        }
-        else if (type == utils::TypeOf<Boolean>().type())
-        {
-            if (const auto* result = ptr<Boolean>(name))
-                return *result;
-        }
+        if (auto* result = retrive<Smallint>(type, name))
+            return *result;
+        if (auto* result = retrive<Int>(type, name))
+            return *result;
+        if (auto* result = retrive<Bigint>(type, name))
+            return *result;
+        if (auto* result = retrive<Real>(type, name))
+            return *result;
+        if (auto* result = retrive<Float8>(type, name))
+            return *result;
+        if (auto* result = retrive<Boolean>(type, name))
+            return *result;
+        if (auto* result = retrive<Text>(type, name))
+            return *result;
+        if (auto* result = retrive<Date>(type, name))
+            return *result;
+        if (auto* result = retrive<Interval>(type, name))
+            return *result;
+        if (auto* result = retrive<Time>(type, name))
+            return *result;
+        if (auto* result = retrive<Timestamp>(type, name))
+            return *result;
         return nullptr;
     }
 
@@ -223,9 +459,9 @@ public:
         }
     }
 
-protected:
-    inline static const auto& memberNames() { return m_names; }
+    inline static const auto& fieldNames() { return m_names; }
 
+protected:
     template <typename... Field>
     ReflectionGroup(Field&&... field)
         : m_position{((void*)&field)...}
@@ -239,12 +475,24 @@ protected:
             m_names = std::vector{name...};
     }
 
-   template <typename... FieldName>
-   inline void reflectTypes(FieldName&&... types)
-   {
-       if (m_position.size() != m_types.size())
-           m_types = std::vector{types...};
-   }
+    template <typename... FieldName>
+    inline void reflectTypes(FieldName&&... types)
+    {
+        if (m_position.size() != m_types.size())
+            m_types = std::vector{types...};
+    }
+
+private:
+    template <typename TableType>
+    const TableType* retrive(uint64_t type, const char* name) const
+    {
+        if (type == utils::TypeOf<TableType>().type())
+        {
+            if (const auto* result = ptr<TableType>(name))
+                return result;
+        }
+        return nullptr;
+    }
 
 protected:
     static inline bool isReferenced = {false};

@@ -18,7 +18,7 @@ public:
     std::string to_string() const override
     {
         auto result = std::stringstream{};
-        result << "SELECT pg_size_pretty( pg_database_size('" << Table().name() << "') )";
+        result << "SELECT pg_size_pretty( pg_database_size('" << Table::name() << "') )";
         return result.str();
     }
 };

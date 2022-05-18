@@ -394,6 +394,12 @@
     struct __TableName : public ::epsql::db::table::ReflectionGroup<__TableName>, \
                          public ::epsql::db::table::ITable \
     { \
+    public: \
+        static auto foreignKeys() \
+        { \
+            return std::array{GET_FOREIGN_KEYS(__FieldName, __FieldRelationType, __VA_ARGS__)}; \
+        } \
+        \
         __TableName() : ReflectionGroup(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
         { \
             reflectNames(PRINTS(NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
@@ -403,6 +409,8 @@
                 assignAll(::epsql::utils::TypeOf<__TableName>().type(), \
                           #__TableName, \
                           GET_FIELD_NAMES(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__))); \
+                for (const auto& fk : foreignKeys()) \
+                    insertForeignKey(fk.field, fk.referenceTable, fk.referenceField); \
                 isReferenced = true; \
             } \
         } \
@@ -436,25 +444,10 @@
         inline bool operator!=(const __TableName& table) const { return !operator==(table); } \
         \
         GET_FIELDS(__TableName, NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)) \
-        virtual const char* name() const override { return #__TableName; } \
-        virtual const char* primaryKeyName() const override { return #__FieldName; } \
-        virtual std::vector<std::string> fieldFullNames() const override { return std::vector{ \
+        static const char* name() { return #__TableName; } \
+        static const char* primaryKeyName() { return #__FieldName; } \
+        static std::vector<std::string> fieldFullNames() { return std::vector{ \
             FIELD_FULL_NAMES(__FieldName, __FieldRelationType, __VA_ARGS__)}; } \
-        virtual std::vector<const char*> fieldNames() const override { return memberNames(); } \
-        auto foreignKeys() const \
-        { \
-            struct InternalForeignKey { \
-                InternalForeignKey(const char* p1, const char* p2, const char* p3) \
-                    : field{p1} \
-                    , referenceTable{p2} \
-                    , referenceField{p3} \
-                {} \
-                const char* field; \
-                const char* referenceTable; \
-                const char* referenceField; \
-            }; \
-            return std::array{GET_FOREIGN_KEYS(__FieldName, __FieldRelationType, __VA_ARGS__)}; \
-        } \
     public: \
         FIELDS(__FieldName, __FieldRelationType, __VA_ARGS__) \
     }; struct __Table##__TableName##Inializer {  __Table##__TableName##Inializer() { (void)(__TableName{}); } } __table##__TableName##Inializer
@@ -468,10 +461,19 @@ class ITable
 public:
     virtual ~ITable() = default;
 
-    virtual const char* name() const = 0;
-    virtual const char* primaryKeyName() const = 0;
-    virtual std::vector<std::string> fieldFullNames() const = 0;
-    virtual std::vector<const char*> fieldNames() const = 0;
+protected:
+    struct InternalForeignKey
+    {
+        InternalForeignKey(const char* p1, const char* p2, const char* p3)
+            : field{p1}
+            , referenceTable{p2}
+            , referenceField{p3}
+        {}
+
+        const char* field;
+        const char* referenceTable;
+        const char* referenceField;
+    };
 };
 
 }  // namespace epsql::db::table

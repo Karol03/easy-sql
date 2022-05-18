@@ -77,7 +77,7 @@ private:
 
     void addOnConflict(std::stringstream& ostr) const
     {
-        const auto primaryKeyName = std::string{decltype(Record::created){}.primaryKeyName()};
+        const auto primaryKeyName = std::string{m_record.created.primaryKeyName()};
         if (!primaryKeyName.empty())
         {
             ostr << "\n  ON CONFLICT (" << primaryKeyName << ") DO NOTHING";

@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 
@@ -59,5 +60,12 @@ template <> inline std::string getValue(const Date& value) { return value.to_str
 template <> inline std::string getValue(const Interval& value) { return value.to_string(); }
 template <> inline std::string getValue(const Time& value) { return value.to_string(); }
 template <> inline std::string getValue(const Timestamp& value) { return value.to_string(); }
+
+using TableVariant = std::variant<Smallint, Int, Bigint,
+                                  Real, Float8,
+                                  Boolean,
+                                  Text,
+                                  Date, Interval, Time, Timestamp,
+                                  void*>;
 
 }  // namespace epsql::db::table
