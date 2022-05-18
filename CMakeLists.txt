@@ -22,8 +22,15 @@ add_executable(easy-sql
     epsql/db/transaction.hpp
 
     epsql/db/lambda/field.hpp
-    epsql/db/lambda/operation.hpp
+    epsql/db/lambda/fieldmanager.hpp
     epsql/db/lambda/query.hpp
+    epsql/db/lambda/semantictree.hpp
+
+    epsql/db/lambda/semantic/operation.hpp
+    epsql/db/lambda/semantic/operationresult.hpp
+    epsql/db/lambda/semantic/operationresultbase.hpp
+    epsql/db/lambda/semantic/operationtree.hpp
+    epsql/db/lambda/semantic/operationtype.hpp
 
     epsql/db/table/reflectiongroup.hpp
     epsql/db/table/table.hpp
@@ -39,6 +46,7 @@ add_executable(easy-sql
     epsql/db/query/translator/removerecord.hpp
     epsql/db/query/translator/updaterecord.hpp
 
+    epsql/db/value/default.hpp
     epsql/db/value/foreignkey.hpp
     epsql/db/value/ivalue.hpp
     epsql/db/value/value.hpp

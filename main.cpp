@@ -134,8 +134,11 @@ void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t=== Step6_HowToFindRecordInTable ===\n";
     auto user = sql.find<Users>(where({     // find single record in 'Users' table
-        auto name = Field(Users::Name);     // declare fields using Field(...) macro
-        return name.startsWith("user");     // find record which field 'Name' starts with 'user'
+        auto userId = Field(Things::UserId);  // declare fields using Field(...) macro
+        auto thingName = Field(Things::Name);
+        auto id = Field(Users::Id);
+        auto name = Field(Users::Name);
+        return (userId == id) && thingName == "thing" && name.startsWith("user");     // find record which field 'Name' starts with 'user'
     }));
 
     if (user)
@@ -165,9 +168,29 @@ void Step7_HowToFindRemoveRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step8_HowToRemoveTable(epsql::PostgreSQL& sql)
+void Step8_HowToFindRecordUsingForeignKeyProperty(epsql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t=== Step8_HowToRemoveTable ===\n";
+    std::cout << "\n\n\t=== Step8_HowToFindRecordUsingForeignKeyProperty ===\n";
+    auto user = sql.find<Users>(where({         // find single record in 'Users' table
+        auto thingName = Field(Things::Name);   // declare fields using Field(...) macro
+        return thingName == "Thing!";           // cause Things table has defined foreign key related
+                                                // to Users table, there is no need to define relation
+                                                // between tables, the default one (foreign key)
+                                                // will be choosen
+    }));
+
+    if (user)
+    {
+        user.remove();
+        user.commit();
+        sql.push();
+    }
+}
+
+
+void Step9_HowToRemoveTable(epsql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t=== Step9_HowToRemoveTable ===\n";
     sql.remove<Things>();
 }
 
@@ -183,7 +206,7 @@ int main()
     Step5_HowToRemoveRecordInTable(sql);
     Step6_HowToFindRecordInTable(sql);
     Step7_HowToFindRemoveRecordInTable(sql);
-    Step8_HowToRemoveTable(sql);
+    Step9_HowToRemoveTable(sql);
 
     return 0;
 }

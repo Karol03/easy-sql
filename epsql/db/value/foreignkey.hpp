@@ -14,13 +14,8 @@
 namespace epsql::db::value
 {
 
-struct IForeignKey
-{
-    virtual ~IForeignKey() = default;
-};
-
 template <typename NullType, int64_t Reference>
-struct ForeignKey : public NullType, public IForeignKey
+struct ForeignKey : public NullType
 {
     ForeignKey() = default;
 
@@ -49,6 +44,7 @@ struct ForeignKey : public NullType, public IForeignKey
             NullType::value = *fk;
         return *this;
     }
+
     template <typename T, int64_t Ref,
               typename = std::enable_if_t<std::is_same_v<typename NullType::ValueType, ForeignKey<T, Ref>::ValueType>>>
     ForeignKey& operator=(ForeignKey<T, Ref>&& fk) noexcept
@@ -130,8 +126,7 @@ template <int64_t fieldUuid>
 struct ForeignKeyDeduce
 {
     template <typename T>
-    using Type = typename ForeignKeyDeducer<is_positive_v<fieldUuid>>::Type<T, fieldUuid>;
+    using Type = typename ForeignKeyDeducer<is_positive_v<fieldUuid>>::template Type<T, fieldUuid>;
 };
-
 
 }  // namespace epsql::db::value

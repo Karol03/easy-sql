@@ -4,22 +4,17 @@
 #pragma once
 
 #include "lambda/field.hpp"
+#include "lambda/fieldmanager.hpp"
 #include "lambda/query.hpp"
+#include "lambda/semantictree.hpp"
+#include "utils/typeof.hpp"
 
-
-#define WHERE0(__QUERY_BODY, ...) \
-    ::epsql::db::lambda::Query([&]() -> std::string \
-    { \
-        auto __manager = ::epsql::db::lambda::__FieldManager{}; \
-        [&]() __QUERY_BODY (); \
-        return __manager.result(); \
-    })
 
 #define DEFINED_ARGS_WHERE(__QUERY_BODY, ...) \
-    ::epsql::db::lambda::Query([__VA_ARGS__]() -> std::string \
+    ::epsql::db::lambda::Query([__VA_ARGS__]() -> ::epsql::db::lambda::SemanticTree \
     { \
-        auto __manager = ::epsql::db::lambda::__FieldManager{}; \
-        [&]() __QUERY_BODY (); \
+        auto __manager = ::epsql::db::lambda::FieldManager{}; \
+        { [&]() -> std::shared_ptr<::epsql::db::lambda::semantic::OperationResultBase> __QUERY_BODY (); } \
         return __manager.result(); \
     })
 
@@ -36,6 +31,13 @@
 #define UNWRAP_WHERE_ARGS11(_v1, ...) _v1, UNWRAP_WHERE_ARGS10(__VA_ARGS__)
 #define UNWRAP_WHERE_ARGS12(_v1, ...) _v1, UNWRAP_WHERE_ARGS11(__VA_ARGS__)
 
+#define WHERE0(__QUERY_BODY, ...) \
+    ::epsql::db::lambda::Query([&]() -> ::epsql::db::lambda::SemanticTree \
+    { \
+        auto __manager = ::epsql::db::lambda::FieldManager{}; \
+        { [&]() -> std::shared_ptr<::epsql::db::lambda::semantic::OperationResultBase> __QUERY_BODY (); } \
+        return __manager.result(); \
+    })
 #define WHERE1(__QUERY_BODY, ...) DEFINED_ARGS_WHERE(__QUERY_BODY, UNWRAP_WHERE_ARGS1(__VA_ARGS__))
 #define WHERE2(__QUERY_BODY, ...) DEFINED_ARGS_WHERE(__QUERY_BODY, UNWRAP_WHERE_ARGS2(__VA_ARGS__))
 #define WHERE3(__QUERY_BODY, ...) DEFINED_ARGS_WHERE(__QUERY_BODY, UNWRAP_WHERE_ARGS3(__VA_ARGS__))
@@ -54,4 +56,11 @@
 
 
 #define where(...)   WHERE_(__VA_ARGS__, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1)
-#define Field(field) ::epsql::db::lambda::__Field(__manager, field##NameGetter())
+
+/**
+ *  Class field accessor
+ */
+#define Field(__ClassField) ::epsql::db::lambda::Field(__manager, \
+                                                       __ClassField##NameGetter(), \
+                                                       ::epsql::utils::TypeOf<decltype(__ClassField)::ValueType>().type(), \
+                                                       decltype(__ClassField)::name())

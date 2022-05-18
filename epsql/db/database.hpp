@@ -120,7 +120,7 @@ public:
     inline std::vector<Table> findLast(std::string queryPayload, std::size_t limit)
     {
         if (!queryPayload.empty())
-            queryPayload += " ORDER BY \"Id\" DESC LIMIT " + std::to_string(limit);
+            queryPayload += " DESC LIMIT " + std::to_string(limit);
         return query(std::move(queryPayload)).template get<std::vector<Table>>();
     }
 

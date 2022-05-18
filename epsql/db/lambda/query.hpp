@@ -4,8 +4,10 @@
 #pragma once
 
 #include <functional>
+#include <stdexcept>
 #include <string>
-#include <variant>
+
+#include "semantictree.hpp"
 
 
 namespace epsql::db::lambda
@@ -13,31 +15,29 @@ namespace epsql::db::lambda
 
 struct Query
 {
-    Query(std::string query)
-        : m_query{std::move(query)}
-    {}
-
-    Query(std::function<std::string()> query)
-        : m_query{std::move(query)}
+    explicit Query(std::function<SemanticTree()> query)
+        : m_queryCreator{std::move(query)}
     {}
 
     inline operator std::string()
     {
-        return std::visit([this](auto&& value) { return get(std::move(value)); }, m_query);
+        if (!m_queryCreator)
+            throw std::runtime_error{"Query without body is forbidden!"};
+
+        auto semanticTree = m_queryCreator();
+        return semanticTree.build(m_table, m_primaryKey);
     }
 
-    inline void operator()(std::string table)
+    inline void operator()(std::string table, std::string primaryKey)
     {
         std::swap(m_table, table);
+        std::swap(m_primaryKey, primaryKey);
     }
 
 private:
-    inline std::string get(std::string&& value) { return std::move(value); }
-    inline std::string get(std::function<std::string()>&& value) { return value(); }
-
-private:
-    std::variant<std::string, std::function<std::string()>> m_query;
+    std::function<SemanticTree()> m_queryCreator;
     std::string m_table;
+    std::string m_primaryKey;
 };
 
 }  // namespace epsql::db::lambda

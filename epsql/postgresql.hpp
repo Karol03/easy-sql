@@ -216,7 +216,7 @@ public:
     {
         try
         {
-            query(Table().name());
+            query(Table().name(), Table().primaryKeyName());
             auto first = m_database->findFirst<Table>(query, 1ul);
             if (!first.empty())
                 return db::Record<Table>(openTransaction(), std::move(first.front()));
@@ -236,7 +236,7 @@ public:
     {
         try
         {
-            query(Table().name());
+            query(Table().name(), Table().primaryKeyName());
             auto result = std::vector<db::Record<Table>>{};
             for (auto&& element : m_database->findFirst<Table>(query, limit))
             {
@@ -257,7 +257,7 @@ public:
     {
         try
         {
-            query(Table().name());
+            query(Table().name(), Table::primaryKeyName());
             auto last = m_database->findLast<Table>(query, 1ul);
             if (!last.empty())
                 return db::Record<Table>(openTransaction(), std::move(last.front()));
@@ -277,7 +277,7 @@ public:
     {
         try
         {
-            query(Table().name());
+            query(Table().name(), Table::primaryKeyName());
             auto result = std::vector<db::Record<Table>>{};
             for (auto&& element : m_database->findLast<Table>(query, limit))
             {
@@ -298,7 +298,7 @@ public:
     {
         try
         {
-            query(Table().name());
+            query(Table().name(), Table::primaryKeyName());
             auto result = std::vector<db::Record<Table>>{};
             for (auto&& element : m_database->findAll<Table>(query))
             {

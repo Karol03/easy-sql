@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include <utility>
+#include "db/table/types.hpp"
 
 
 namespace epsql::utils
@@ -12,9 +12,9 @@ namespace epsql::utils
 struct ITypeOf
 {
 protected:
-    static inline std::size_t generate() noexcept
+    static inline uint64_t generate() noexcept
     {
-        static std::size_t i = 0;
+        static uint64_t i = 0;
         return ++i;
     }
 };
@@ -36,7 +36,55 @@ public:
     }
 
 private:
-    static inline std::size_t m_type = 0;
+    static inline uint64_t m_type = 0;
 };
+
+
+template <typename T>
+inline constexpr bool isNumeric()
+{
+    return std::is_same_v<T, Smallint> ||
+           std::is_same_v<T, Int> ||
+           std::is_same_v<T, Bigint> ||
+           std::is_same_v<T, Real> ||
+           std::is_same_v<T, Float8>;
+}
+
+inline bool isNumeric(const uint64_t type)
+{
+    return (type == TypeOf<Smallint>().type()) ||
+           (type == TypeOf<Int>().type()) ||
+           (type == TypeOf<Bigint>().type()) ||
+           (type == TypeOf<Real>().type()) ||
+           (type == TypeOf<Float8>().type());
+}
+
+template <typename T>
+inline constexpr bool isText()
+{
+    return std::is_same_v<T, Text>;
+}
+
+inline bool isText(const uint64_t type)
+{
+    return (type == TypeOf<Text>().type());
+}
+
+template <typename T>
+inline constexpr bool isDate()
+{
+    return std::is_same_v<T, Date> ||
+           std::is_same_v<T, Interval> ||
+           std::is_same_v<T, Time> ||
+           std::is_same_v<T, Timestamp>;
+}
+
+inline constexpr bool isDate(const uint64_t type)
+{
+    return (type == TypeOf<Date>().type()) ||
+           (type == TypeOf<Interval>().type()) ||
+           (type == TypeOf<Time>().type()) ||
+           (type == TypeOf<Timestamp>().type());
+}
 
 }  // namespace epsql::utils

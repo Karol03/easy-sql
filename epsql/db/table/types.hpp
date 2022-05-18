@@ -3,15 +3,16 @@
  */
 #pragma once
 
-#include <array>
+#include <sstream>
 #include <string>
 #include <vector>
 
 
-template <std::size_t Size>
-using Char = std::array<char, Size>;
-template <std::size_t Size>
-using Varchar = std::array<char, Size>;
+struct Date { std::string to_string() const { return {}; } };
+struct Interval { std::string to_string() const { return {}; } };
+struct Time { std::string to_string() const { return {}; } };
+struct Timestamp { std::string to_string() const { return {}; } };
+
 using Text = std::string;
 
 using Smallint = int16_t;
@@ -33,6 +34,10 @@ namespace epsql::db::table
 {
 
 template <typename T> inline const char* nameOf() { return "UNKNOWN"; }
+template <> inline const char* nameOf<Date>() { return "Date"; }
+template <> inline const char* nameOf<Interval>() { return "Interval"; }
+template <> inline const char* nameOf<Time>() { return "Time"; }
+template <> inline const char* nameOf<Timestamp>() { return "Timestamp"; }
 template <> inline const char* nameOf<Text>() { return "Text"; }
 template <> inline const char* nameOf<Smallint>() { return "Smallint"; }
 template <> inline const char* nameOf<Int>() { return "Int"; }
@@ -48,7 +53,11 @@ template <> inline std::string getValue(const Int& value) { return std::to_strin
 template <> inline std::string getValue(const Bigint& value) { return std::to_string(value); }
 template <> inline std::string getValue(const Real& value) { return std::to_string(value); }
 template <> inline std::string getValue(const Float8& value) { return std::to_string(value); }
-template <> inline std::string getValue(const Boolean& value) { return std::to_string(value); }
+template <> inline std::string getValue(const Boolean& value) { auto result = std::stringstream{}; result << std::boolalpha << value; return result.str(); }
 template <> inline std::string getValue(const Text& value) { return std::string{"'"} + value + "'"; }
+template <> inline std::string getValue(const Date& value) { return value.to_string(); }
+template <> inline std::string getValue(const Interval& value) { return value.to_string(); }
+template <> inline std::string getValue(const Time& value) { return value.to_string(); }
+template <> inline std::string getValue(const Timestamp& value) { return value.to_string(); }
 
 }  // namespace epsql::db::table

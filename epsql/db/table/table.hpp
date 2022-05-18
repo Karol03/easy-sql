@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "db/value/default.hpp"
 #include "db/value/foreignkey.hpp"
 #include "db/value/value.hpp"
 #include "reflectiongroup.hpp"
@@ -347,8 +348,10 @@
 
 #define DEFAULT0(...) static_assert(false && "Macro DEFAULT(...) must have at least 2 arguments [currently 0] (see table.hpp)")
 #define DEFAULT1(...) static_assert(false && "Macro DEFAULT(...) must have at least 2 arguments [currently 1] (see table.hpp)")
-#define DEFAULT2(__FieldType, __Value, ...)
-#define DEFAULT3(__FieldType, __Value, __IsNullable)
+#define DEFAULT2(__FieldType, __Value, ...) \
+    ::epsql::db::value::DefaultDeduce<1>::Type<__FieldType>
+#define DEFAULT3(__FieldType, __Value, __IsNullable) \
+    ::epsql::db::value::DefaultDeduce<(__IsNullable - 1)>::Type<__FieldType>
 
 #define DEFAULT_(__FieldType, __Value, __IsNullable, n, ...) \
     DEFAULT##n(__FieldType, __Value, __IsNullable)

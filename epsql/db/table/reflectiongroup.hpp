@@ -92,7 +92,7 @@ template <typename T>
 class ReflectionGroup : public ReflectionRegister
 {
 public:
-    inline uint64_t typeOf(const char* name) const
+    static inline uint64_t typeOf(const char* name)
     {
         auto it = std::find_if(m_names.begin(), m_names.end(),
                                [&name](const auto* n) { return strcmp(name, n) == 0; });
