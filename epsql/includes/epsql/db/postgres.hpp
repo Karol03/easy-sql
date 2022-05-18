@@ -1,4 +1,4 @@
-0/**
+/**
  * Created by Karol Dudzic @ 2022
  */
 #pragma once
@@ -35,7 +35,6 @@ public:
         std::cerr << "[PostgreSQL] Call query:\n" << sqlQuery << "\n";
         return DbResult{};
     }
-
 };
 
 }  // namespace epsql::db

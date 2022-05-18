@@ -12,3 +12,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/epsql)
 add_executable(easy-sql
     main.cpp
 )
+
+target_link_directories(easy-sql PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/epsql)
+target_link_libraries(easy-sql epsql-lib)
