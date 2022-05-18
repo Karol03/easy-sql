@@ -8,10 +8,10 @@
 #include <string>
 #include <cstring>
 
+#include "epsql/utils/typeof.hpp"
 #include "fieldmanager.hpp"
 #include "semantic/operation.hpp"
 #include "semantic/operationresult.hpp"
-#include "utils/typeof.hpp"
 
 
 namespace epsql::db::lambda
@@ -23,14 +23,7 @@ public:
     Field(FieldManager& manager,
           const char* tableAndFieldName,
           uint64_t fieldTypeId,
-          const char* nullableName)
-        : m_isNullable{strcmp(nullableName, "NULL") == 0}
-        , m_manager{manager}
-        , m_fieldTypeId{fieldTypeId}
-        , m_tableFieldName{tableAndFieldName}
-    {
-        m_tableFieldName.replace(m_tableFieldName.find(':'), 2, ".");
-    }
+          const char* nullableName);
 
     template <typename T> friend FieldManager::OperationResult operator==(const T& lhs, const Field& rhs);
     template <typename T> friend FieldManager::OperationResult operator==(const Field& lhs, const T& rhs);

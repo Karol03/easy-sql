@@ -3,11 +3,11 @@
  */
 #pragma once
 
+#include "epsql/utils/typeof.hpp"
 #include "lambda/field.hpp"
 #include "lambda/fieldmanager.hpp"
 #include "lambda/query.hpp"
 #include "lambda/semantictree.hpp"
-#include "utils/typeof.hpp"
 
 
 #define DEFINED_ARGS_WHERE(__QUERY_BODY, ...) \

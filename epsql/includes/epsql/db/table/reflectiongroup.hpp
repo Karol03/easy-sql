@@ -12,9 +12,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "db/value/ivalue.hpp"
+#include "epsql/db/value/ivalue.hpp"
+#include "epsql/utils/hash.hpp"
 #include "types.hpp"
-#include "utils/hash.hpp"
 
 
 namespace epsql::db::table

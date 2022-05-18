@@ -7,12 +7,12 @@
 #include <type_traits>
 #include <vector>
 
-#include "db/value/default.hpp"
-#include "db/value/foreignkey.hpp"
-#include "db/value/value.hpp"
+#include "epsql/db/value/default.hpp"
+#include "epsql/db/value/foreignkey.hpp"
+#include "epsql/db/value/value.hpp"
+#include "epsql/utils/hash.hpp"
+#include "epsql/utils/typeof.hpp"
 #include "reflectiongroup.hpp"
-#include "utils/hash.hpp"
-#include "utils/typeof.hpp"
 
 
 #define PRINT(_v1) #_v1

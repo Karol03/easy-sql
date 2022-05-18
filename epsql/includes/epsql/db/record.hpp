@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "epsql/utils/typeof.hpp"
 #include "transaction.hpp"
-#include "utils/typeof.hpp"
 
 
 namespace epsql::db

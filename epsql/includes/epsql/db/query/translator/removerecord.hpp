@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#include "db/table/reflectiongroup.hpp"
+#include "epsql/db/table/reflectiongroup.hpp"
 
 
 namespace epsql::db::query::translator

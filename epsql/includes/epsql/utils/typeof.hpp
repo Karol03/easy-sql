@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include "db/table/types.hpp"
+#include "epsql/db/table/types.hpp"
 
 
 namespace epsql::utils

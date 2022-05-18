@@ -7,8 +7,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "db/table/reflectiongroup.hpp"
-#include "utils/typeof.hpp"
+#include "epsql/db/table/reflectiongroup.hpp"
+#include "epsql/utils/typeof.hpp"
 
 
 namespace epsql::db::query::translator
