@@ -3,7 +3,7 @@
  */
 #include <iostream>
 
-#include "epsql/postgresql.hpp"
+#include "esql/sql.hpp"
 
 
 using namespace std;
@@ -22,8 +22,6 @@ using namespace std;
  *          NOT_NULL(type)
  *          FOREIGN_KEY(referenced field 'Class::Field', <optional> NULL/NOTNULL - if field nullable/not nullable)
  *                                                       default value is NULL
- *          DEFAULT(type, value, <optional> NULL/NOTNULL)
- *                               default value is NULL
  *  Allowed types:
  *      text:       Text
  *      bool:       Boolean
@@ -42,9 +40,25 @@ CREATE_TABLE(Things,
              UserId,   FOREIGN_KEY(Users::Id),
              Name,     NOT_NULL(Text));
 
+CREATE_TABLE(Stats,
+             Id,       NOT_NULL(Int),
+             ThingId,  FOREIGN_KEY(Things::Id),
+             Name,     NOT_NULL(Text),
+             Value,    NOT_NULL(Int));
+
+CREATE_TABLE(SupportStats,
+             Id,       NOT_NULL(Int),
+             ThingId,  FOREIGN_KEY(Things::Id),
+             Name,     NOT_NULL(Text),
+             Value,    NOT_NULL(Int));
+
+CREATE_TABLE(Options,
+             Id,       NOT_NULL(Int),
+             StatId,   FOREIGN_KEY(Stats::Id),
+             Value,    NOT_NULL(Int));
 
 
-void Step1_HowToConnectDatabase(epsql::PostgreSQL& sql)
+void Step1_HowToConnectDatabase(esql::PostgreSQL& sql)
 {
     std::cout << "\t\t\t=== Step1_HowToConnectDatabase ===\n";
     if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
@@ -55,18 +69,24 @@ void Step1_HowToConnectDatabase(epsql::PostgreSQL& sql)
 }
 
 
-void Step2_HowToCreateDefinedTables(epsql::PostgreSQL& sql)
+void Step2_HowToCreateDefinedTables(esql::PostgreSQL& sql)
 {
     std::cout << "\n\t\t\t=== Step2_HowToCreateDefinedTables ===\n";
     if (!sql.create<Users>())
         throw std::runtime_error{"Failed to create table 'Users'\n"};
     if (!sql.create<Things>())
         throw std::runtime_error{"Failed to create table 'Things'\n"};
+    if (!sql.create<Stats>())
+        throw std::runtime_error{"Failed to create table 'Stats'\n"};
+    if (!sql.create<SupportStats>())
+        throw std::runtime_error{"Failed to create table 'SupportStats'\n"};
+    if (!sql.create<Options>())
+        throw std::runtime_error{"Failed to create table 'Options'\n"};
     /* If table already existed, nothing happens - no recreation, no exception */
 }
 
 
-void Step3_HowToCreateNewRecordInTable(epsql::PostgreSQL& sql)
+void Step3_HowToCreateNewRecordInTable(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step3_HowToCreateNewRecordInTable ===\n";
     auto user = sql.insert<Users>();
@@ -87,7 +107,7 @@ void Step3_HowToCreateNewRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step4_HowToUpdateRecordInTable(epsql::PostgreSQL& sql)
+void Step4_HowToUpdateRecordInTable(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step4_HowToUpdateRecordInTable ===\n";
     auto user = sql.insert<Users>();
@@ -112,7 +132,7 @@ void Step4_HowToUpdateRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step5_HowToRemoveRecordInTable(epsql::PostgreSQL& sql)
+void Step5_HowToRemoveRecordInTable(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step5_HowToRemoveRecordInTable ===\n";
     auto user = sql.insert<Users>();
@@ -130,7 +150,7 @@ void Step5_HowToRemoveRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
+void Step6_HowToFindRecordInTable(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step6_HowToFindRecordInTable ===\n";
     auto user = sql.find<Users>(where({     // find single record in 'Users' table
@@ -151,7 +171,7 @@ void Step6_HowToFindRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step7_HowToFindAndRemoveRecordInTable(epsql::PostgreSQL& sql)
+void Step7_HowToFindAndRemoveRecordInTable(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step7_HowToFindAndRemoveRecordInTable ===\n";
     auto user = sql.find<Users>(where({     // find single record in 'Users' table
@@ -168,29 +188,97 @@ void Step7_HowToFindAndRemoveRecordInTable(epsql::PostgreSQL& sql)
 }
 
 
-void Step8_HowToFindRecordUsingImplicitForeignKeyProperty(epsql::PostgreSQL& sql)
+void Step8_HowToFindRecordUsingImplicitForeignKeyProperty(esql::PostgreSQL& sql)
 {
     std::cout << "\n\n\t\t\t=== Step8_HowToFindRecordUsingImplicitForeignKeyProperty ===\n";
-    auto user = sql.find<Users>(where({         // find single record in 'Users' table
-        auto thingName = Field(Things::Name);   // declare fields using Field(...) macro
-        return thingName == "Thing!";           // cause Things table has defined foreign key related
-                                                // to Users table, there is no need to define relation
-                                                // between tables, the default one (foreign key)
-                                                // will be choosen
-    }));
-
-    if (user)
     {
-        user.remove();
-        user.commit();
-        sql.push();
+        auto user = sql.find<Users>(where({          // find single record in 'Users' table
+            auto thingName = Field(Things::Name);    // declare fields using Field(...) macro
+            return (thingName == "Thing!");          // Because tables 'Things' and 'Users' are tied in relation chain
+                                                     // Things::UserId -> Users::Id, there is no need to define relation explicitly
+                                                     // the default one will be choosen
+                                                     // If no relation chain between tables
+                                                     // none elements will be selected
+        }));
+    }
+
+    {       // even more complicated relation might occurs
+        auto user = sql.find<Users>(where({             // we still looking for user
+            auto thingName = Field(Things::Name);
+            auto optionValue = Field(Options::Value);
+            auto statName = Field(Stats::Name);
+            auto statValue = Field(Stats::Value);
+            auto supportStatValue = Field(SupportStats::Value);
+            return (thingName == "Thing!") || (optionValue == 23) ||
+                   (statName == thingName && statValue > 20) ||
+                   (supportStatValue > 50 && statValue < 17);
+        }));
     }
 }
 
 
-void Step9_HowToRemoveTable(epsql::PostgreSQL& sql)
+void Step9_HowToPassProgramVariablesInFindQuery(esql::PostgreSQL& sql)
 {
-    std::cout << "\n\n\t\t\t=== Step8_HowToFindRecordUsingImplicitForeignKeyProperty ===\n";
+    std::cout << "\n\n\t\t\t=== Step9_HowToPassProgramVariablesInFindQuery ===\n";
+    const auto userNameVar = std::string{"user"};
+    const auto thingNameVar = std::string{"Thing!"};
+
+    // Approach 1. - just use variable inside where({}) - by default all variables are visible in the scopt
+    {
+        auto user = sql.find<Users>(where({
+            auto userName = Field(Users::Name);
+            auto thingName = Field(Things::Name);
+            return (thingName == thingNameVar) && (userName == userNameVar);
+        }));
+    }
+
+    // Approach 2. - define variables visible in scope
+    {
+        auto user = sql.find<Users>(where({
+            auto userName = Field(Users::Name);
+            auto thingName = Field(Things::Name);
+            return (thingName == thingNameVar) && (userName == userNameVar);
+        }, &thingNameVar, userNameVar)); // pass 'thingNameVar' by reference
+                                         // and 'userNameVar' by value
+    }
+}
+
+
+void Step10_HowToCombineProgramVariablesInFindQuery(esql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t\t\t=== Step10_HowToCombineProgramVariablesInFindQuery ===\n";
+    const auto userNameVar = std::string{"user"};
+    const auto userNameVec = std::vector<std::string>{"User", "user4"};
+    const auto thingNameVar = std::string{"Thing!"};
+
+    // Scenario 1.
+    {
+        auto user = sql.find<Users>(where({
+            auto thingName = Field(Things::Name);
+            return (thingName == thingNameVar) &&
+                   (std::find(userNameVec.begin(), userNameVec.end(), userNameVar) != userNameVec.end());
+            // program variable expressions are evaluated first
+            // there is no sql query emitted if whole exprossion evaluates to 'false'
+        }));
+    }
+
+    // Scenario 2.
+    {
+        auto user = sql.find<Users>(where({          // find single record in 'Users' table
+            auto userName = Field(Users::Name);
+            auto thingName = Field(Things::Name);
+            // if (userName == "username")          // these two lines will compile but the result will be an error
+            //     return thingName == "thing";     // in error stream and no query will be emitted
+                                                    // creating code branches in where({}) is forbidden
+            return thingName == "Thing!";
+        }));
+    }
+}
+
+
+void Step11_HowToRemoveTable(esql::PostgreSQL& sql)
+{
+    std::cout << "\n\n\t\t\t=== Step11_HowToRemoveTable ===\n";
     sql.remove<Things>();
 }
 
@@ -198,7 +286,7 @@ void Step9_HowToRemoveTable(epsql::PostgreSQL& sql)
 int main()
 {
     auto str = std::make_shared<std::stringstream>();
-    epsql::PostgreSQL sql(str);
+    esql::PostgreSQL sql(str);
 
     Step1_HowToConnectDatabase(sql);
     Step2_HowToCreateDefinedTables(sql);
@@ -208,7 +296,9 @@ int main()
     Step6_HowToFindRecordInTable(sql);
     Step7_HowToFindAndRemoveRecordInTable(sql);
     Step8_HowToFindRecordUsingImplicitForeignKeyProperty(sql);
-    Step9_HowToRemoveTable(sql);
+    Step9_HowToPassProgramVariablesInFindQuery(sql);
+    Step10_HowToCombineProgramVariablesInFindQuery(sql);
+    Step11_HowToRemoveTable(sql);
 
     std::cerr << "Error stream : {\n" << str->str() << "\n}\n";
 
