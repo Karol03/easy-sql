@@ -33,6 +33,11 @@ add_library(esql-lib
         includes/esql/db/table/reflectiongroup.hpp
         includes/esql/db/table/table.hpp
         includes/esql/db/table/types.hpp
+        includes/esql/db/table/types/date.hpp
+        includes/esql/db/table/types/interval.hpp
+        includes/esql/db/table/types/point.hpp
+        includes/esql/db/table/types/time.hpp
+        includes/esql/db/table/types/timestamp.hpp
 
         includes/esql/db/query/createtable.hpp
         includes/esql/db/query/isexiststable.hpp

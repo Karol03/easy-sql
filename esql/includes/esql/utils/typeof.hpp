@@ -47,7 +47,8 @@ inline constexpr bool isNumeric()
            std::is_same_v<T, Int> ||
            std::is_same_v<T, Bigint> ||
            std::is_same_v<T, Real> ||
-           std::is_same_v<T, Float8>;
+           std::is_same_v<T, Float8> ||
+           std::is_same_v<T, Point>;
 }
 
 inline bool isNumeric(const uint64_t type)

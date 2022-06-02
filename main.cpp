@@ -26,7 +26,7 @@ using namespace std;
  *      text:       Text
  *      bool:       Boolean
  *      arithmetic: Smallint, Int, Bigint,
- *                  Real, Float8, Double
+ *                  Real, Float8, Double, Point
  */
 CREATE_TABLE(Users,
              Id,       NOT_NULL(Int),

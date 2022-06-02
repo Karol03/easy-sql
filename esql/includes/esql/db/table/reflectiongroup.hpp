@@ -216,6 +216,8 @@ public:
             return *result;
         if (auto* result = retrive<Float8>(type, name))
             return *result;
+        if (auto* result = retrive<Point>(type, name))
+            return *result;
         if (auto* result = retrive<Boolean>(type, name))
             return *result;
         if (auto* result = retrive<Text>(type, name))
