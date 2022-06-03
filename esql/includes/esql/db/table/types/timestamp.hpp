@@ -4,6 +4,7 @@
 #pragma once
 
 #include "date.hpp"
+#include "interval.hpp"
 #include "time.hpp"
 
 
@@ -69,6 +70,9 @@ public:
     inline void month(uint16_t value) { m_date.month(value); }
     inline void year(uint16_t value) { m_date.year(value); }
 
+    inline void reset() { m_date.reset(); m_time.reset(); }
+    inline operator bool() const { return m_date || m_time; }
+
     inline Timestamp& advance(const Time& time)
     {
         constexpr auto SINGLE_DAY = 1u;
@@ -131,9 +135,11 @@ public:
     friend Timestamp operator+(const Timestamp& lhs, const Time& rhs);
     friend Timestamp operator-(const Timestamp& lhs, const Time& rhs);
     friend Timestamp operator+(const Time& lhs, const Timestamp& rhs);
+    friend Timestamp operator-(const Time& lhs, const Timestamp& rhs);
     friend Timestamp operator+(const Timestamp& lhs, const Date& rhs);
     friend Timestamp operator-(const Timestamp& lhs, const Date& rhs);
     friend Timestamp operator+(const Date& lhs, const Timestamp& rhs);
+    friend Timestamp operator-(const Date& lhs, const Timestamp& rhs);
 
     friend bool operator==(const Timestamp& lhs, const Timestamp& rhs);
     friend bool operator!=(const Timestamp& lhs, const Timestamp& rhs);
@@ -142,7 +148,7 @@ public:
     friend bool operator>(const Timestamp& lhs, const Timestamp& rhs);
     friend bool operator>=(const Timestamp& lhs, const Timestamp& rhs);
 
-private:
+protected:
     Date m_date;
     Time m_time;
 };
@@ -154,9 +160,11 @@ inline Timestamp operator-(const Timestamp& lhs, const uint32_t& rhs) { return (
 inline Timestamp operator+(const Timestamp& lhs, const Time& rhs) { return (Timestamp{lhs} += rhs); }
 inline Timestamp operator-(const Timestamp& lhs, const Time& rhs) { return (Timestamp{lhs} -= rhs); }
 inline Timestamp operator+(const Time& lhs, const Timestamp& rhs) { return (Timestamp{rhs} += lhs); }
+inline Timestamp operator-(const Time& lhs, const Timestamp& rhs) { return (Timestamp{lhs, {}} -= rhs); }
 inline Timestamp operator+(const Timestamp& lhs, const Date& rhs) { return (Timestamp{lhs} += rhs); }
 inline Timestamp operator-(const Timestamp& lhs, const Date& rhs) { return (Timestamp{lhs} -= rhs); }
 inline Timestamp operator+(const Date& lhs, const Timestamp& rhs) { return (Timestamp{rhs} += lhs); }
+inline Timestamp operator-(const Date& lhs, const Timestamp& rhs) { return (Timestamp{lhs, {}} -= rhs); }
 
 inline bool operator==(const Timestamp& lhs, const Timestamp& rhs) { return lhs.m_time == rhs.m_time && lhs.m_date == rhs.m_date; }
 inline bool operator!=(const Timestamp& lhs, const Timestamp& rhs) { return !operator==(lhs, rhs); }
@@ -164,5 +172,30 @@ inline bool operator<(const Timestamp& lhs, const Timestamp& rhs) { return lhs.m
 inline bool operator<=(const Timestamp& lhs, const Timestamp& rhs) { return !operator>(lhs, rhs); }
 inline bool operator>(const Timestamp& lhs, const Timestamp& rhs) { return lhs.m_date > rhs.m_date || (lhs.m_date == rhs.m_date && lhs.m_time > rhs.m_time); }
 inline bool operator>=(const Timestamp& lhs, const Timestamp& rhs) { return !operator<(lhs, rhs); }
+
+inline Timestamp operator+(const Date& lhs, const Interval& rhs)
+{
+    return Timestamp{lhs, {}}.advance(rhs.days())
+                             .advance(Time{rhs.seconds()});
+}
+inline Timestamp operator+(const Interval& lhs, const Date& rhs) { return rhs + lhs; }
+inline Timestamp operator-(const Date& lhs, const Interval& rhs)
+{
+    return Timestamp{lhs, {}}.back(rhs.days())
+                             .back(Time{rhs.seconds()});
+}
+inline Timestamp operator+(const Time& lhs, const Date& rhs) { return Timestamp{lhs, rhs}; }
+inline Timestamp operator+(const Date& rhs, const Time& lhs) { return Timestamp{lhs, rhs}; }
+inline Timestamp operator+(const Timestamp& lhs, const Interval& rhs)
+{
+    return Timestamp{lhs}.advance(rhs.days())
+                         .advance(Time{rhs.seconds()});
+}
+inline Timestamp operator-(const Timestamp& lhs, const Interval& rhs)
+{
+    return Timestamp{lhs}.back(rhs.days())
+                         .back(Time{rhs.seconds()});
+}
+inline Timestamp operator+(const Interval& lhs, const Timestamp& rhs) { return rhs + lhs; }
 
 }  // namespace esql::db::table::types

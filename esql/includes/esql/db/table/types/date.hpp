@@ -163,6 +163,9 @@ public:
         return *this;
     }
 
+    inline void reset() { m_day = 0; m_month = 0; m_year = 0; }
+    inline operator bool() const { return m_day || m_month || m_year; }
+
     inline Date& operator+=(const uint32_t& days) { advance(days); return *this; }
     inline Date& operator-=(const uint32_t& days) { back(days); return *this; }
 

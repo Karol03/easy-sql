@@ -90,7 +90,7 @@ inline Point operator*(const double& lhs, const Point& rhs) { return Point{lhs *
 inline Point operator/(const double& lhs, const Point& rhs) { return Point{lhs / rhs.m_x, lhs / rhs.m_y}; }
 
 inline bool operator==(const Point& lhs, const Point& rhs) { return lhs.m_x == rhs.m_x && lhs.m_y == lhs.m_y; }
-inline bool operator!=(const Point& lhs, const Point& rhs) { return lhs.m_x != rhs.m_x || lhs.m_y != lhs.m_y; }
+inline bool operator!=(const Point& lhs, const Point& rhs) { return !operator==(lhs, rhs); }
 inline bool operator<(const Point& lhs, const Point& rhs) { return (lhs.m_x < rhs.m_x) || (lhs.m_x == rhs.m_x && lhs.m_y < rhs.m_y); }
 inline bool operator<=(const Point& lhs, const Point& rhs){ return !operator>(lhs, rhs); }
 inline bool operator>(const Point& lhs, const Point& rhs) { return (lhs.m_x > rhs.m_x) || (lhs.m_x == rhs.m_x && lhs.m_y > rhs.m_y); }

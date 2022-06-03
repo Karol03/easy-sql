@@ -10,17 +10,16 @@
 #include <variant>
 
 #include "types/date.hpp"
+#include "types/interval.hpp"
+#include "types/point.hpp"
 #include "types/time.hpp"
 #include "types/timestamp.hpp"
-#include "types/point.hpp"
 
 
 using Time = esql::db::table::types::Time;
 using Date = esql::db::table::types::Date;
 using Timestamp = esql::db::table::types::Timestamp;
-struct Interval { std::string to_string() const { return {}; } };
-
-
+using Interval = esql::db::table::types::Interval;
 
 using Text = std::string;
 

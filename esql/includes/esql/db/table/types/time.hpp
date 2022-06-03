@@ -6,6 +6,8 @@
 #include <inttypes.h>
 #include <string>
 
+#include "interval.hpp"
+
 
 namespace esql::db::table::types
 {
@@ -138,7 +140,8 @@ public:
         return buffer;
     }
 
-    inline operator bool() { return m_hour || m_minute || m_second; }
+    inline void reset() { m_second = 0; m_minute = 0; m_hour = 0; }
+    inline operator bool() const { return m_hour || m_minute || m_second; }
 
     inline Time& operator+=(const Time& rhs)
     {
@@ -194,6 +197,9 @@ inline Time operator+(const Time& lhs, const uint32_t& rhs) { return (Time{lhs} 
 inline Time operator-(const Time& lhs, const uint32_t& rhs) { return (Time{lhs} -= rhs); }
 inline Time operator+(const uint32_t& lhs, const Time& rhs) { return (Time{lhs} += rhs); }
 inline Time operator-(const uint32_t& lhs, const Time& rhs) { return (Time{lhs} -= rhs); }
+inline Time operator+(const Time& lhs, const Interval& rhs) { return Time{lhs} += rhs.seconds(); }
+inline Time operator+(const Interval& lhs, const Time& rhs) { return rhs + lhs; }
+inline Time operator-(const Time& lhs, const Interval& rhs) { return Time{lhs} -= rhs.seconds(); }
 
 inline bool operator==(const Time& lhs, const Time& rhs) { return lhs.m_hour == rhs.m_hour && lhs.m_minute == rhs.m_minute && lhs.m_second == rhs.m_second; }
 inline bool operator!=(const Time& lhs, const Time& rhs) { return !operator==(lhs, rhs); }
