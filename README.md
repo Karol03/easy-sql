@@ -91,5 +91,4 @@ In case of fail it is most likely that nothing will happen. In case of an error,
 
 # Todos
 - Default value of variable
-- Date/Timestamp types
 - Object fetching
