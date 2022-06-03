@@ -61,11 +61,23 @@ CREATE_TABLE(Options,
 void Step1_HowToConnectDatabase(esql::PostgreSQL& sql)
 {
     std::cout << "\t\t\t=== Step1_HowToConnectDatabase ===\n";
-    if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
-                     "hostaddr = 127.0.0.1 port = 5432"))
+    // you could use credential object
+    auto credentials = esql::Credentials{}; // and initialize it in constructor
+    credentials.setDatabase("testdb")       // or by builder
+               .setUser("user")
+               .setPassword("password")
+               .setHostAddress("127.0.0.1")
+               .setPort(5432);
+    if (!sql.connect(std::move(credentials)))
     {
         throw std::runtime_error{"Failed to connect to the database\n"};
     }
+    // or you could use connection string
+    // if (!sql.connect("dbname = testdb user = postgres password = cohondob " \
+    //                  "hostaddr = 127.0.0.1 port = 5432"))
+    // {
+    //     throw std::runtime_error{"Failed to connect to the database\n"};
+    // }
 }
 
 
